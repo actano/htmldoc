@@ -73,19 +73,17 @@ getProjectRoot (root) ->
             ]
 
 
+
+
 scanForHtmlFiles = (filepaths, root, callback) ->
 
     dive "#{root}/lib", { all: false }, (err, filepath) ->
         if err? then console.error err
-
+        #console.log filepath
         if filepath.match(new RegExp(includes, 'g'))
-            if excludes?
-                if not filepath.match(new RegExp(excludes, 'g'))
-                    relFilepath = path.relative root, filepath
-                    filepaths.push relFilepath
-            else
-                relFilepath = path.relative root, filepath
-                filepaths.push relFilepath
+            console.log filepath
+            relFilepath = path.relative root, filepath
+            filepaths.push relFilepath
     , () ->
         console.log 'scanning complete'
         callback()
@@ -110,7 +108,7 @@ copyHtmlFiles = (filepaths, root, htmlDir, callback) ->
             if err?
                 console.log err
 
-            exec "mv #{sourceFile} #{targetDir}", (err, stdout)  ->
+            exec "cp #{sourceFile} #{targetDir}", (err, stdout)  ->
                 if err?
                     console.log err
                 filename = path.basename filepath
@@ -126,16 +124,16 @@ copyHtmlFiles = (filepaths, root, htmlDir, callback) ->
 
 createIndexFile = (root, paths, callback) ->
 
-    sidebarTemplate = jade.compile fs.readFileSync 'index.jade', 'utf8'
-
-    html = sidebarTemplate paths
+    #sidebarTemplate = jade.compile fs.readFileSync './views/index.jade', 'utf8'
+    #html = sidebarTemplate paths
+    linkList = createLinkList paths
 
     htmlContent = """
                   <html>
                     <head>
-                        <style>.sidebar {width:300px;height:800px;border: 0px;} .main {width:900px;height:800px;border: 0px;}</style>
+                        <style>.sidebar {width:300px;height:600px;border: 0px;float:left;} .list {list-style-type: none;} .main {width:900px;height:600px;border: 0px;float:left;}</style>
                     </head>
-                    <body><div class="sidebar"></div>
+                    <body><div class="sidebar">
                   """
     htmlContent += linkList
     htmlContent +="""
@@ -145,15 +143,14 @@ createIndexFile = (root, paths, callback) ->
                   </html>
                    """
 
-    fs.writeFile "#{root}/#{docFolder}/sidebar.html", htmlContent, (err) ->
+    fs.writeFile "#{root}/#{docFolder}/index.html", htmlContent, (err) ->
         if err? then console.error err
         console.log 'Written index.html'
         callback()
 
-###
+
 createLinkList = (paths) ->
-    linkList = '<ul>'
+    linkList = '<ul class="list">'
     for i in paths
         linkList += '<li><a target="main" href="' + i + '">' + i + '</a></li>'
     linkList += '</ul>'
-###
