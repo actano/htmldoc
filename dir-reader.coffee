@@ -55,22 +55,19 @@ getProjectRoot (root) ->
 
     fs.exists htmlDir, (exists) ->
         if exists
-            removeDir.removeSync htmlDir
+            exec "rm -r #{htmlDir}/*", (err,stdout,stderr) ->
+                console.log err if err?
 
-        mkdirp htmlDir, (err) ->
-            if err?
-                console.log err
-
-            async.series [
-                (callback) ->
-                    scanForHtmlFiles filepaths, root, callback
-            ,
-                (callback) ->
-                    copyHtmlFiles filepaths, root, htmlDir, callback
-            ,
-                (callback) ->
-                    createIndexFile root, filepaths, callback
-            ]
+                async.series [
+                    (callback) ->
+                        scanForHtmlFiles filepaths, root, callback
+                ,
+                    (callback) ->
+                        copyHtmlFiles filepaths, root, htmlDir, callback
+                ,
+                    (callback) ->
+                        createIndexFile root, filepaths, callback
+                ]
 
 
 
