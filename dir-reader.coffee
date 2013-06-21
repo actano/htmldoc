@@ -21,78 +21,74 @@ async = require 'async'
 markdown = require('markdown').markdown
 jade = require 'jade'
 
-includes = '.*.html$'
-excludes = 'build|test'
+
 #excludes = 'chef\/cookbooks|node_modules|htmldoc|build'
 
-docFolder = "htmldoc"
-
-
+enviroment =
+    rootPath: ''
+    rootDocNamePattern: 'readme.md'
+    docPath: 'htmldoc'
+    rootDocFilename: ''
+    includes: '.*.html$'
+    excludes: 'build|test'
+    foundFiles: []
 
 # get root directory
-getProjectRoot = (callback) ->
+getProjectRoot = (env, cb) ->
     exec 'npm bin', (err, stdout)  ->
         if err?
             console.log err
-        root = path.resolve stdout, "../../"
-        callback root
+        env.rootPath = path.resolve stdout, "../../"
+        cb()
 
-# create html directory and start processing
-getProjectRoot (root) ->
+getRootDocFile = (env, cb) ->
+    fs.readdir env.rootPath, (err,files) ->
+        for file in files
+            if file.match new RegExp("readme.md", 'i') then env.rootDocFilename = file
+        cb()
 
-    htmlDir = "#{root}/#{docFolder}"
-    filepaths = []
+convertRootDocFile = (env, cb) ->
+    fs.readFile "#{env.rootPath}/#{env.rootDocFilename}", "utf8", (err,fileContent) ->
 
-    rootFile = "#{root}/Readme.md"
+        htmlContent = markdown.toHTML(fileContent.toString())
+        destFilename = path.basename env.rootDocFilename, '.md'
+        fs.writeFile "#{env.rootPath}/#{destFilename}.html", htmlContent, (err) ->
+            if err? then console.log err
 
-    mdContent = fs.readFileSync(rootFile,"utf8")
-    htmlContent = markdown.toHTML(mdContent.toString())
-    fs.writeFile "#{root}/Readme.html", htmlContent, (err) ->
-        if err? then console.log err else console.log "Written #{rootFile} in #{root}"
+        env.foundFiles.push "#{destFilename}.html"
 
-    # add file in root path
-    filepaths.push 'Readme.html'
+        cb()
 
-    fs.exists htmlDir, (exists) ->
+checkDocFolder = (env, cb) ->
+    fs.exists "#{env.rootPath}/#{env.docPath}", (exists) ->
         if exists
-            exec "rm -r #{htmlDir}/*", (err,stdout,stderr) ->
+            exec "rm -r #{env.rootPath}/#{env.docPath}/*", (err,stdout,stderr) ->
                 console.log err if err?
+                cb()
+        else
+            mkdirp "#{env.rootPath}/#{env.docPath}", (err) ->
+                console.log err if err?
+                cb()
 
-                async.series [
-                    (callback) ->
-                        scanForHtmlFiles filepaths, root, callback
-                ,
-                    (callback) ->
-                        copyHtmlFiles filepaths, root, htmlDir, callback
-                ,
-                    (callback) ->
-                        createIndexFile root, filepaths, callback
-                ]
+scanForHtmlFiles = (env, cb) ->
 
-
-
-
-scanForHtmlFiles = (filepaths, root, callback) ->
-
-    dive "#{root}/lib", { all: false }, (err, filepath) ->
+    dive "#{env.rootPath}/lib", { all: false }, (err, filepath) ->
         if err? then console.error err
         #console.log filepath
-        if filepath.match(new RegExp(includes, 'g'))
-            console.log filepath
-            relFilepath = path.relative root, filepath
-            filepaths.push relFilepath
+        if filepath.match(new RegExp(env.includes, 'g'))
+            if not filepath.match(new RegExp(env.excludes, 'g'))
+                env.foundFiles.push path.relative env.rootPath, filepath
     , () ->
-        console.log 'scanning complete'
-        callback()
+        cb()
 
 
-copyHtmlFiles = (filepaths, root, htmlDir, callback) ->
+copyHtmlFiles = (env, cb) ->
 
-    async.each filepaths, (filepath, callback) ->
+    async.each env.foundFiles, (filepath, callback) ->
         relDirname = path.dirname filepath
 
-        sourceFile = "#{root}/#{filepath}"
-        targetDir = "#{htmlDir}/#{relDirname}"
+        sourceFile = "#{env.rootPath}/#{filepath}"
+        targetDir = "#{env.rootPath}/#{env.docPath}/#{relDirname}"
 
         console.log targetDir
 
@@ -111,39 +107,39 @@ copyHtmlFiles = (filepaths, root, htmlDir, callback) ->
                 filename = path.basename filepath
                 console.log "File moved: #{targetDir}#{filename}"
 
-                callback()
+                cb()
     , (err) ->
         if err?
             console.log err
         console.log 'copying complete'
 
-        callback()
+        cb()
 
-createIndexFile = (root, paths, callback) ->
+createIndexFile = (env, cb) ->
 
     #sidebarTemplate = jade.compile fs.readFileSync './views/index.jade', 'utf8'
     #html = sidebarTemplate paths
-    linkList = createLinkList paths
+    linkList = createLinkList env.foundFiles
 
     htmlContent = """
                   <html>
-                    <head>
-                        <style>.sidebar {width:300px;height:600px;border: 0px;float:left;} .list {list-style-type: none;} .main {width:900px;height:600px;border: 0px;float:left;}</style>
-                    </head>
-                    <body><div class="sidebar">
+                  <head>
+                  <style>.sidebar {width:300px;height:600px;border: 0px;float:left;} .list {list-style-type: none;} .main {width:900px;height:600px;border: 0px;float:left;}</style>
+                  </head>
+                  <body><div class="sidebar">
                   """
     htmlContent += linkList
     htmlContent +="""
-                        </div>
-                        <iframe name="main" class="main" src="Readme.html"></iframe>
-                    </body>
+                  </div>
+                  <iframe name="main" class="main" src="Readme.html"></iframe>
+                  </body>
                   </html>
-                   """
+                  """
 
-    fs.writeFile "#{root}/#{docFolder}/index.html", htmlContent, (err) ->
+    fs.writeFile "#{env.rootPath}/#{env.docPath}/index.html", htmlContent, (err) ->
         if err? then console.error err
         console.log 'Written index.html'
-        callback()
+        cb()
 
 
 createLinkList = (paths) ->
@@ -151,3 +147,38 @@ createLinkList = (paths) ->
     for i in paths
         linkList += '<li><a target="main" href="' + i + '">' + i + '</a></li>'
     linkList += '</ul>'
+
+main = ->
+
+    async.series [
+        (cb) ->
+            getProjectRoot enviroment, cb
+    ,
+        (cb) ->
+            getRootDocFile enviroment, cb
+    ,
+        (cb) ->
+            convertRootDocFile enviroment, cb
+    ,
+        (cb) ->
+            checkDocFolder enviroment, cb
+    ,
+        (cb) ->
+            scanForHtmlFiles enviroment, cb
+    ,
+        (cb) ->
+            copyHtmlFiles enviroment, cb
+    ,
+        (cb) ->
+            createIndexFile enviroment, cb
+
+    ]
+
+
+main()
+
+
+
+
+
+
