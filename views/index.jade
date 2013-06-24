@@ -4,17 +4,27 @@ html(lang="en")
        title Library Documentation
 
        style
+           .content {
+               width: 1400px;
+           }
            .sidebar {
-               width: 300px;
+               width: 25%;
+               height: 700px;
+               float: left;
            }
            .linklist {
-
+               list-style-type: none;
            }
            .main {
-               width: 900px;
+               width: 75%;
                height: 700px;
+               border: 0px;
+               float: left;
            }
    body
-       .sidebar
-            ul.linklist
-       iframe.main
+       .content
+           .sidebar
+                ul.linklist
+                    for file in paths
+                        li: a(href=file, target="main") #{file}
+           iframe(name="main", src="README.html").main

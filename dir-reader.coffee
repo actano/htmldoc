@@ -115,41 +115,21 @@ copyHtmlFiles = (env, cb) ->
 
         cb()
 
-createIndexFile = (env, cb) ->
+createIndexFileFromJade = (env, cb) ->
 
-    #sidebarTemplate = jade.compile fs.readFileSync './views/index.jade', 'utf8'
-    #html = sidebarTemplate paths
-    linkList = createLinkList env.foundFiles
+    sidebarTemplate = jade.compile fs.readFileSync './views/index.jade', 'utf8'
 
-    htmlContent = """
-                  <html>
-                  <head>
-                  <style>.sidebar {width:300px;height:600px;border: 0px;float:left;} .list {list-style-type: none;} .main {width:900px;height:600px;border: 0px;float:left;}</style>
-                  </head>
-                  <body><div class="sidebar">
-                  """
-    htmlContent += linkList
-    htmlContent +="""
-                  </div>
-                  <iframe name="main" class="main" src="Readme.html"></iframe>
-                  </body>
-                  </html>
-                  """
+    links =
+        paths: env.foundFiles
+
+    htmlContent = sidebarTemplate links
 
     fs.writeFile "#{env.rootPath}/#{env.docPath}/index.html", htmlContent, (err) ->
         if err? then console.error err
         console.log 'Written index.html'
         cb()
 
-
-createLinkList = (paths) ->
-    linkList = '<ul class="list">'
-    for i in paths
-        linkList += '<li><a target="main" href="' + i + '">' + i + '</a></li>'
-    linkList += '</ul>'
-
 main = ->
-
     async.series [
         (cb) ->
             getProjectRoot enviroment, cb
@@ -170,7 +150,7 @@ main = ->
             copyHtmlFiles enviroment, cb
     ,
         (cb) ->
-            createIndexFile enviroment, cb
+            createIndexFileFromJade enviroment, cb
 
     ]
 
