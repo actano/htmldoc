@@ -10,7 +10,7 @@
 ###
 
 
-
+nopt = require "nopt"
 fs = require 'fs'
 dive = require 'dive'
 path = require 'path'
@@ -21,17 +21,28 @@ async = require 'async'
 markdown = require('markdown').markdown
 jade = require 'jade'
 
-
-#excludes = 'chef\/cookbooks|node_modules|htmldoc|build'
-
 enviroment =
     rootPath: ''
     rootDocNamePattern: 'readme.md'
-    docPath: 'htmldoc'
+    docPath: 'build/htmldoc'
     rootDocFilename: ''
     includes: '.*.html$'
     excludes: 'build|test'
+    folder: []
     foundFiles: []
+
+#excludes = 'chef\/cookbooks|node_modules|htmldoc|build'
+
+knownOpts = {
+    "folder" : String
+}
+shortHands = {
+    "f" : ["--folder"]
+}
+
+parsed = nopt(knownOpts, shortHands, process.argv, 2)
+
+if parsed.folder? then enviroment.folder = parsed.folder.split ',' else enviroment.folder.push 'lib'
 
 # get root directory
 getProjectRoot = (env, cb) ->
@@ -44,22 +55,25 @@ getProjectRoot = (env, cb) ->
 getRootDocFile = (env, cb) ->
     fs.readdir env.rootPath, (err,files) ->
         for file in files
-            if file.match new RegExp("readme.md", 'i') then env.rootDocFilename = file
+            if file.match new RegExp(env.rootDocNamePattern, 'i') then env.rootDocFilename = file
         cb()
 
 convertRootDocFile = (env, cb) ->
-    fs.readFile "#{env.rootPath}/#{env.rootDocFilename}", "utf8", (err,fileContent) ->
 
-        htmlContent = markdown.toHTML(fileContent.toString())
-        destFilename = path.basename env.rootDocFilename, '.md'
-        fs.writeFile "#{env.rootPath}/#{destFilename}.html", htmlContent, (err) ->
-            if err? then console.log err
+    if env.rootDocFilename?
+        fs.readFile "#{env.rootPath}/#{env.rootDocFilename}", "utf8", (err,fileContent) ->
 
-        env.foundFiles.push "#{destFilename}.html"
+            htmlContent = markdown.toHTML(fileContent.toString())
+            destFilename = path.basename env.rootDocFilename, '.md'
+            fs.writeFile "#{env.rootPath}/#{destFilename}.html", htmlContent, (err) ->
+                if err? then console.log err
 
-        cb()
+            env.foundFiles.push "#{destFilename}.html"
+
+    cb()
 
 checkDocFolder = (env, cb) ->
+
     fs.exists "#{env.rootPath}/#{env.docPath}", (exists) ->
         if exists
             exec "rm -r #{env.rootPath}/#{env.docPath}/*", (err,stdout,stderr) ->
@@ -70,16 +84,22 @@ checkDocFolder = (env, cb) ->
                 console.log err if err?
                 cb()
 
-scanForHtmlFiles = (env, cb) ->
+diveIntoFolder = (folder, cb) ->
 
-    dive "#{env.rootPath}/lib", { all: false }, (err, filepath) ->
-        if err? then console.error err
-        #console.log filepath
-        if filepath.match(new RegExp(env.includes, 'g'))
-            if not filepath.match(new RegExp(env.excludes, 'g'))
-                env.foundFiles.push path.relative env.rootPath, filepath
-    , () ->
-        cb()
+
+scanForHtmlFiles = (env, globalCallback) ->
+
+    if env.folder.length > 0
+        async.each env.folder, (item, itemCallback ) ->
+            dive "#{env.rootPath}/#{item}", { all: false }, (err, filepath) ->
+                if err? then console.error err
+                if filepath.match(new RegExp(env.includes, 'g'))
+                    if not filepath.match(new RegExp(env.excludes, 'g'))
+                        env.foundFiles.push path.relative env.rootPath, filepath
+            , () -> itemCallback()
+        , () ->
+            console.log env
+            globalCallback()
 
 
 copyHtmlFiles = (env, cb) ->
@@ -151,7 +171,6 @@ main = ->
     ,
         (cb) ->
             createIndexFileFromJade enviroment, cb
-
     ]
 
 
