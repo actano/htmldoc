@@ -137,7 +137,7 @@ copyHtmlFiles = (env, cb) ->
 
 createIndexFileFromJade = (env, cb) ->
 
-    sidebarTemplate = jade.compile fs.readFileSync './views/index.jade', 'utf8'
+    sidebarTemplate = jade.compile fs.readFileSync "#{env.rootPath}/tools/htmldoc/views/index.jade", 'utf8'
 
     links =
         paths: env.foundFiles
