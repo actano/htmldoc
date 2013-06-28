@@ -1,3 +1,11 @@
+#! /usr/bin/env coffee
+
+###
+    script converts markdown files .md into html files with the
+    npm markdown module
+
+###
+
 markdown = require('markdown').markdown
 fsUtil = require 'fs'
 path = require 'path'
