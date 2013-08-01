@@ -26,8 +26,8 @@ enviroment =
     rootDocNamePattern: 'readme.md'
     docPath: 'build/htmldoc'
     rootDocFilename: ''
-    includes: '.*.html$'
-    excludes: 'build|test'
+    includes: 'Readme.html$|History.html$'
+    excludes: 'test'
     folder: []
     foundFiles: []
 
@@ -93,7 +93,7 @@ scanForHtmlFiles = (env, globalCallback) ->
         async.each env.folder, (item, itemCallback ) ->
             dive "#{env.rootPath}/#{item}", { all: false }, (err, filepath) ->
                 if err? then console.error err
-                if filepath.match(new RegExp(env.includes, 'g'))
+                if filepath.match(new RegExp(env.includes, 'i'))
                     if not filepath.match(new RegExp(env.excludes, 'g'))
                         env.foundFiles.push path.relative env.rootPath, filepath
             , () -> itemCallback()
