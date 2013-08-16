@@ -20,6 +20,7 @@ removeDir = require 'remove'
 async = require 'async'
 markdown = require('markdown').markdown
 jade = require 'jade'
+{_} = require 'underscore'
 
 enviroment =
     rootPath: ''
@@ -95,7 +96,10 @@ scanForHtmlFiles = (env, globalCallback) ->
                 if err? then console.error err
                 if filepath.match(new RegExp(env.includes, 'i'))
                     if not filepath.match(new RegExp(env.excludes, 'g'))
-                        env.foundFiles.push path.relative env.rootPath, filepath
+                        file = path.relative env.rootPath, filepath
+
+                        env.foundFiles.push file
+
             , () -> itemCallback()
         , () ->
             console.log env
@@ -139,8 +143,15 @@ createIndexFileFromJade = (env, cb) ->
 
     sidebarTemplate = jade.compile fs.readFileSync "#{env.rootPath}/tools/htmldoc/views/index.jade", 'utf8'
 
+    regex = new RegExp /lib\/|\/documentation|\/build|\.html/gi
+
+    paths = _(env.foundFiles).map (path) ->
+                    newPath = path.replace regex, ''
+                    console.log newPath
+                    return { href: path, name: newPath }
+
     links =
-        paths: env.foundFiles
+        paths: paths
 
     htmlContent = sidebarTemplate links
 

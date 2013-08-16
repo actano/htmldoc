@@ -14,6 +14,7 @@ html(lang="en")
            }
            .linklist {
                list-style-type: none;
+               line-height: 2em;
            }
            .main {
                width: 75%;
@@ -26,5 +27,5 @@ html(lang="en")
            .sidebar
                 ul.linklist
                     for file in paths
-                        li: a(href=file, target="main") #{file}
+                        li: a(href=file.href, target="main") #{file.name}
            iframe(name="main", src="README.html").main
