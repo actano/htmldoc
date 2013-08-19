@@ -25,7 +25,7 @@ jade = require 'jade'
 enviroment =
     rootPath: ''
     rootDocNamePattern: 'readme.md'
-    docPath: 'build/htmldoc'
+    docPath: 'build/documentation'
     rootDocFilename: ''
     includes: 'Readme.html$|History.html$'
     excludes: 'test'
