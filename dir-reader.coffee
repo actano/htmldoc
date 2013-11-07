@@ -51,22 +51,18 @@ getProjectRoot = (env, cb) ->
         if err?
             console.log err
         env.rootPath = path.resolve stdout, "../../"
-        console.log "getProjectRoot=#{env.rootPath}"
         cb()
 
 getRootDocFile = (env, cb) ->
     fs.readdir env.rootPath, (err,files) ->
         for file in files
-            console.log "getRootDocFile: file=#{file}"
             if file.match new RegExp(env.rootDocNamePattern, 'i')
                 env.rootDocFilename = file
-                console.log "getRootDocFile: matched file=#{file}"
         cb()
 
 convertRootDocFile = (env, cb) ->
 
     if env.rootDocFilename?
-        console.log "convertRootDocFile: env.rootDocFilename=#{env.rootDocFilename}"
         fs.readFile "#{env.rootPath}/#{env.rootDocFilename}", "utf8", (err,fileContent) ->
 
             htmlContent = markdown.toHTML(fileContent.toString())
