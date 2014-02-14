@@ -1,0 +1,18 @@
+mixin createNavigation(url)
+
+    - typeof url === 'undefined' ? url = document.url : void 0
+    - var collectionName = "pages"
+    - var opts = {mainNav: {$exists: true}}
+    - createCollectionFor(url, collectionName, opts)
+    !=console.log("navigation")
+    - var pages = generateMenu(url, collectionName)
+    +navigation(pages)
+
+mixin navigation(pages)
+    ul
+        each page in pages
+            li(class=[page.state ? "selected" : ""])
+                a(href="/htmldoc/" + page.url)
+                    =page.title ? page.title : page.url
+                if page.children
+                    +navigation(page.children)

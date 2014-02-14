@@ -1,0 +1,43 @@
+include partials/dynamic_navigation.html.jade
+- var scripts = getBlock("scripts") //- JS für Live-Reload und weitere Plugins
+- var styles = getBlock("styles") //- CSS für Plugins
+- styles.add("/adminpage.css")
+doctype
+html
+    head
+        meta(charset='utf-8')
+        title=document.title 
+        != styles.toHTML()
+        style(type='text/css')
+            .threecolumn .content {
+                width: 100%;
+            }
+            .threecolumn .content .firstLevelContent,
+            .threecolumn .content .secondLevelContent {
+                float: left;
+            }
+            .threecolumn .content .firstLevelContent {
+                width: calc(25% - 6em)
+            }
+
+            .threecolumn .content .secondLevelContent {
+                width: calc(75% - 6em)
+            }
+
+            .threecolumn .content .firstLevelContent ul {
+                list-style: none;
+                padding: 0;
+            }
+            .threecolumn .content .firstLevelContent ul li {
+                margin: 0 0 0.5em 0
+            }
+
+    body
+        .threecolumn
+            .content
+                .firstLevelContent
+                    +createNavigation()
+                .secondLevelContent
+                    !=content
+        include partials/footer.html.jade
+    != scripts.toHTML()
