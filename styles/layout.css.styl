@@ -1,2 +1,53 @@
-body
-    background greenyellow
+.threecolumn .content
+    width: 100%
+    display flex
+    .firstLevelContent, .secondLevelContent
+        flex-grow 1
+        flex-shrink 1
+        flex-wrap nowrap
+    .firstLevelContent
+        max-width: 25%
+        padding: 0 0.5em
+        > ul
+            height: calc(100% - 7em)
+        ul
+            list-style: none
+            padding: 0
+            margin: 0 0 0 1em
+            overflow: auto
+            li
+                margin: 0 0 0.5em 0
+                display:  none
+                &.page--parent, &.page--parent > ul > li
+                    display: block
+                &.page--current
+                    font-weight: bold
+
+    .secondLevelContent
+        max-width: 75%
+        ul.pagenavigation
+            display: flex
+            list-style: none
+            padding: 0
+            margin: 0
+            border-right: 1px solid
+            li
+                flex-grow: 1
+                background: lightgray
+                padding: 0
+                border-left: 1px solid
+                border-bottom: 1px solid
+                a
+                    display: inline-block
+                    width: 100%
+                    padding: 1em
+                    
+                &.selected a, &:hover a
+                    background: green
+        .commitlog
+            ul
+                list-style: none
+                padding: 0
+                li
+                    border-bottom: 1px solid lightgray
+                    padding: 0 0 1em 0

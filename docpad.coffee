@@ -13,17 +13,27 @@ module.exports =
     srcPath: '../../build/htmldoc/src'
     outPath: '../../build/htmldoc/out'
     documentsPaths: [
+        '../../../tools/htmldoc/styles'
         '.'
     ]
     filesPaths: []
     layoutsPaths: [  # default
         '../../../tools/htmldoc/layouts'
     ]
-    collections:
-        # For instance, this one will fetch in all documents that have pageOrder set within their meta data
-        pages: (database) ->
-            database.findAllLive(isPage: true)
+    renderPasses: 2  # default
 
+
+    collections:
+        features: (database) ->
+            database.findAllLive({
+                    relativeOutDirPath:
+                        $startsWith: 'lib/'
+                }
+                [url: 1]
+            )
+
+
+    # Template Configuration
     templateData:  # example
 
         # Specify some site properties
@@ -41,26 +51,22 @@ module.exports =
             keywords: """
                 place, your, website, keywoards, here, keep, them, related, to, the, content, of, your, website
                 """
-
-        ###
-        # topLevelDirectory can be the language (de, en)
-        # subTree is optional and restricts the result for the given subdirectory
-        # without the index.* of the subdirectory
-        # opts and sort will be passed to docpad's databaseQueryEngine.findAllLive method
-        #
-        ###
-        getCollectionFor: () ->
-
-            @getDatabase().findAllLive({url:$startsWith:'/lib'}, [url:1])
+        getTitleForPage: (page) ->
+            title = page.title
+            if !page.title
+                title = page.url.replace(".html", "")
+                title = (if title.substr(-1) is "/" then title.substr(0, title.length - 1) else title)
+                title = title.split("/").pop()
+                if title == "lib" then title = "Features"
+            return title
 
 
-        ###
-        # creates and set a collection with the given name
-        # for all files which are exist under the given topLevelDirectory (de)
-        ###
-        createCollectionFor: (topLevelDirectory, collectionName, opts, sort) ->
-            collection = @getCollectionFor topLevelDirectory, null, opts, sort
-            docpad.setCollection(collectionName, collection)
+
+    plugins:
+        menu:
+            menuOptions:
+                optimize: false
+                skipEmpty: false
 
 
 

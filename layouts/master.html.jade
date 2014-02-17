@@ -1,43 +1,33 @@
 include partials/dynamic_navigation.html.jade
 - var scripts = getBlock("scripts") //- JS für Live-Reload und weitere Plugins
 - var styles = getBlock("styles") //- CSS für Plugins
-- styles.add("/adminpage.css")
+- styles.add(["/adminpage.css","/htmldoc/layout.css"])
 doctype
 html
     head
         meta(charset='utf-8')
-        title=document.title 
+        - title = document.url.substr(0, document.url.lastIndexOf("/")).split("/").pop()
+        title=(document.title  ? document.title : title) + " | RPLAN - Developer Documentation"
         != styles.toHTML()
-        style(type='text/css')
-            .threecolumn .content {
-                width: 100%;
-            }
-            .threecolumn .content .firstLevelContent,
-            .threecolumn .content .secondLevelContent {
-                float: left;
-            }
-            .threecolumn .content .firstLevelContent {
-                width: calc(25% - 6em)
-            }
 
-            .threecolumn .content .secondLevelContent {
-                width: calc(75% - 6em)
-            }
-
-            .threecolumn .content .firstLevelContent ul {
-                list-style: none;
-                padding: 0;
-            }
-            .threecolumn .content .firstLevelContent ul li {
-                margin: 0 0 0.5em 0
-            }
 
     body
         .threecolumn
             .content
                 .firstLevelContent
-                    +createNavigation()
+                    h2 Topics
+                    +navigation(generateMenu(document.url, "features"))
                 .secondLevelContent
-                    !=content
+                    h2=title
+                    - pages = ["Readme", "History", "Commits"]
+                    ul.pagenavigation
+                        for page in pages
+                            - pageUrl = page + ".html"
+                            li(class=(pageUrl == (document.url.substr(document.url.lastIndexOf("/")+1)) ? "selected" : ""))
+                                a(href=pageUrl)
+                                    =page
+
+                    div(class=document.contenttype)
+                        !=content
         include partials/footer.html.jade
     != scripts.toHTML()
