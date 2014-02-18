@@ -7,24 +7,53 @@
         flex-wrap nowrap
     .firstLevelContent
         max-width: 25%
-        padding: 0 0.5em
+        padding: 0
+        :before
+            display: none
         > ul
             height: calc(100% - 7em)
         ul
             list-style: none
             padding: 0
-            margin: 0 0 0 2em
+            margin: 0
             overflow: auto
             li
-                margin: 0.5em 0 0 0
+                margin: 0
                 display:  none
+                padding: 0
+                line-height 2em
+                position: relative
                 &.page--parent, &.page--parent > ul > li
                     display: block
-                &.page--current
+                &.page--current, &.page--parent.level2
+                    background: #c8def5
+                    &:after
+                        position: absolute
+                        content: ""
+                        width: 0
+                        height: 0
+                        right: 0
+                        top: 0
+                        border-top: 1em solid transparent
+                        border-bottom: 1em solid transparent
+                        border-right: 1em solid #fff
+                        display: block
+
+
+                &.page--current > a,
+                &.page--parent > a
                     font-weight: bold
                 a
                     color: #000000
                     text-decoration none
+                    padding-left: 1em
+                    display: block
+                li a
+                    padding-left: 2em
+                li li a
+                        padding-left: 3em
+
+
 
     .secondLevelContent
         max-width: 75%

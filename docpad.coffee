@@ -50,7 +50,6 @@ module.exports =
     plugins:
         menu:
             menuOptions:
-                _optimize: false
                 skipEmpty: false
 
 

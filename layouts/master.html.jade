@@ -16,16 +16,10 @@ html
             .content
                 .firstLevelContent
                     h2 Topics
-                    +navigation(generateMenu(document.url, "features"), 1)
+                    +navigation(generateMenu(document.url, "features"), 1, 1, 2)
                 .secondLevelContent
                     h2=title
-                    - pages = ["Readme", "History", "Commits"]
-                    ul.pagenavigation
-                        for page in pages
-                            - pageUrl = page + ".html"
-                            li(class=(pageUrl == (document.url.substr(document.url.lastIndexOf("/")+1)) ? "selected" : ""))
-                                a(href=pageUrl)
-                                    =page
+                    +navigation(generateMenu(document.url, "features"), 1, 3, 3)
 
                     div(class=document.contenttype)
                         !=content
