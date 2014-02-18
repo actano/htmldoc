@@ -50,6 +50,8 @@ module.exports =
         menu:
             menuOptions:
                 skipEmpty: false
+        livereload:
+            enabled: false
 
 
 
