@@ -1,8 +1,8 @@
-mixin navigation(pages)
+mixin navigation(pages, level)
     ul
         each page in pages
             li(class=[page.state  ? "page--" + page.state : ""])
-                a(href="/htmldoc" + (page.url.lastIndexOf("/") == page.url.length - 1 ? page.url + "Readme.html" : page.url))
+                a(href="/htmldoc" + (page.url.lastIndexOf("/") == page.url.length - 1 ? page.url + "index.html" : page.url))
                     =getTitleForPage(page)
-                if page.children
-                    +navigation(page.children)
+                if (page.children && level < 2)
+                    +navigation(page.children, level + 1)

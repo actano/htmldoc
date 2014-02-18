@@ -16,7 +16,7 @@ html
             .content
                 .firstLevelContent
                     h2 Topics
-                    +navigation(generateMenu(document.url, "features"))
+                    +navigation(generateMenu(document.url, "features"), 1)
                 .secondLevelContent
                     h2=title
                     - pages = ["Readme", "History", "Commits"]
