@@ -94,3 +94,21 @@
                 > li
                     border-bottom: 1px solid lightgray
                     padding: 0 0 1em 0
+
+    @media screen and (max-width: 500px)
+        .firstLevelContent
+            position: relative
+            display: inline-block
+            max-width: calc(100%)
+            width: calc(100%)
+            &:after
+                display: none
+            &.edit
+                display: none
+        .secondLevelContent
+            position: relative
+            display: none
+            max-width: calc(100%)
+            width: calc(100%)
+        .firstLevelContent.edit + .secondLevelContent
+            display: inline-block
