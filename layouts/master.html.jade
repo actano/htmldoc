@@ -1,7 +1,6 @@
 include partials/dynamic_navigation.html.jade
-- var scripts = getBlock("scripts") //- JS für Live-Reload und weitere Plugins
 - var styles = getBlock("styles") //- CSS für Plugins
-- styles.add(["/adminpage.css","/htmldoc/layout.css"])
+- styles.add(["/adminpage.css", rootPath(document) + "layout.css"])
 doctype
 html
     head
@@ -31,4 +30,3 @@ html
                     div(class=[devdoccontent, document.contenttype])
                         !=content
         include partials/footer.html.jade
-    != scripts.toHTML()
