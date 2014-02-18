@@ -7,7 +7,7 @@ mixin navigation(pages, level, minlevel, maxlevel)
         ul
             each page in pages
                 li(class=[page.state  ? "page--" + page.state : "", "level" + level])
-                    a(href="/htmldoc" + (page.url.lastIndexOf("/") == page.url.length - 1 ? page.url + "index.html" : page.url))
+                    a(href=rootPath(document) + (page.url.lastIndexOf("/") == page.url.length - 1 ? page.url.substring(1) + "index.html" : page.url.substring(1)))
                         =getTitleForPage(page)
                     if (page.children && level < maxlevel)
                         +navigation(page.children, level + 1, minlevel, maxlevel)
