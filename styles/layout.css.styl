@@ -8,8 +8,17 @@
     .firstLevelContent
         max-width: 25%
         padding: 0
-        :before
+        &:not(.home):after
             display: none
+        h2
+            margin: 0 1em 1em 1em
+            position: relative
+            a
+                text-decoration: none
+                color: inherit
+                &.downloadlink
+                    position: absolute
+                    right: 0
         > ul
             height: calc(100% - 7em)
         ul
@@ -23,9 +32,9 @@
                 padding: 0
                 line-height 2em
                 position: relative
-                &.page--parent, &.page--parent > ul > li
+                &.page--current, &.page--current > ul > li, &.page--parent, &.page--parent > ul > li
                     display: block
-                &.page--current, &.page--parent.level2
+                &.page--current > a, &.page--parent.level2 > a
                     background: #c8def5
                     &:after
                         position: absolute
@@ -46,18 +55,19 @@
                 a
                     color: #000000
                     text-decoration none
-                    padding-left: 1em
+                    padding-left: (24/12em)
                     display: block
                 li a
-                    padding-left: 2em
+                    padding-left: (36/12em)
                 li li a
-                        padding-left: 3em
-
+                        padding-left: (48/12em)
+        .home .level1
+            display: block
 
 
     .secondLevelContent
         max-width: 75%
-        ul.pagenavigation
+        .pagenavigation > ul
             display: flex
             list-style: none
             padding: 0
@@ -75,7 +85,7 @@
                     color: #fff
                     text-decoration none
                     
-                &.selected a, &:hover a
+                &.page--current a, &:hover a
                     background: #1a76d5
         .commitlog
             > ul
