@@ -24,13 +24,8 @@ module.exports =
 
 
     collections:
-        features: (database) ->
-            database.findAllLive({
-                    relativeOutDirPath:
-                        $startsWith: 'lib/'
-                }
-                [url: 1]
-            )
+        features: () ->
+            @getCollection("html")
 
 
     # Template Configuration
@@ -45,7 +40,11 @@ module.exports =
                 title = title.split("/").pop()
             return title
 
-
+        rootPath: (document)->
+            result = ""
+            len = document.url.split("/").length - 1
+            result += "../" while len -= 1;
+            return result
 
     plugins:
         menu:
