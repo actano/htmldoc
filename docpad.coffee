@@ -43,7 +43,7 @@ module.exports =
         rootPath: (document)->
             result = ""
             len = document.url.split("/").length - 1
-            result += "../" while len -= 1;
+            result += "../" while len -= 1
             return result
 
     plugins:
