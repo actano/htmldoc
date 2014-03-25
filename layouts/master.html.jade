@@ -14,12 +14,11 @@ html
 
     body
         div#nav
-            div.content--padded
-                h2
-                    a(href=rootPath(document) + "index.html") Htmldoc
-                    a(class="downloadlink", href=rootPath(document) + "htmldoc.tgz")
-                        i.fa.fa-download(title="Download HTMLDOC")
-                +navigation(generateMenu(document.url, "features"), 1, 1, 2)
+            h2
+                a(href=rootPath(document) + "index.html") Htmldoc
+                a(class="downloadlink", href=rootPath(document) + "htmldoc.tgz")
+                    i.fa.fa-download(title="Download HTMLDOC")
+            +navigation(generateMenu(document.url, "features"), 1, 1, 2)
 
         #content
             div.content--padded
