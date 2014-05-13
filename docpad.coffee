@@ -5,13 +5,13 @@ URL_PREFIX = URL_PREFIX_NAME+'/'
 ABS_URL_PREFIX = '/'+URL_PREFIX_NAME
 URL_PATTERN = URL_PREFIX_NAME+'\\/'
 
-{TOOLS,NODE_MODULES,HTMLDOC} = process.env
+{TOOLS,PLUGINS,HTMLDOC} = process.env
 TOOLS ?= "../../../tools"
-NODE_MODULES ?= "../../node_modules"
+PLUGINS ?= "../../node_modules"
 HTMLDOC ?= "../../build/htmldoc"
 
 module.exports =
-    pluginsPaths: [ NODE_MODULES ]
+    pluginsPaths: [ PLUGINS ]
     srcPath: "#{HTMLDOC}/src"
     outPath: "#{HTMLDOC}/out"
     documentsPaths: [
