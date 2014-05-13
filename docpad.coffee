@@ -5,22 +5,24 @@ URL_PREFIX = URL_PREFIX_NAME+'/'
 ABS_URL_PREFIX = '/'+URL_PREFIX_NAME
 URL_PATTERN = URL_PREFIX_NAME+'\\/'
 
+{TOOLS,NODE_MODULES,HTMLDOC} = process.env
+TOOLS ?= "../../../tools"
+NODE_MODULES ?= "../../node_modules"
+HTMLDOC ?= "../../build/htmldoc"
 
 module.exports =
-    pluginsPaths: [
-        '../../node_modules'
-    ]
-    srcPath: '../../build/htmldoc/src'
-    outPath: '../../build/htmldoc/out'
+    pluginsPaths: [ NODE_MODULES ]
+    srcPath: "#{HTMLDOC}/src"
+    outPath: "#{HTMLDOC}/out"
     documentsPaths: [
-        '../../../tools/htmldoc/styles'
+        "#{TOOLS}/htmldoc/styles"
         '.'
     ]
     filesPaths: []
-    layoutsPaths: [  # default
-        '../../../tools/htmldoc/layouts'
+    layoutsPaths: [
+        "#{TOOLS}/htmldoc/layouts"
     ]
-    renderPasses: 2  # default
+    renderPasses: 2
 
 
     collections:
