@@ -3,7 +3,9 @@ fs = require 'fs'
 mkdirp = require 'mkdirp'
 {markdown} = require 'markdown'
 {basename, dirname, join, normalize, relative} = require 'path'
+{exec, spawn} = require 'child_process'
 async = require 'async'
+util = require 'util'
 template = null
 
 tree = {}
@@ -102,6 +104,56 @@ fixDir = (dir) ->
     dir = '' if dir == '.'
     tree[dir] = {} unless tree[dir]?
     d = tree[dir]
+    unless d['commit.html'] || dir == ''
+        d['commit.html'] = {
+            title: 'Commits'
+            url: join dir, 'commit.html'
+            src: (cb) ->
+                async.waterfall [
+                    (cb) ->
+                        exec 'git config remote.origin.url', cb
+                    (stdout, stderr, cb) ->
+                        url = stdout.toString()
+                            .replace /(.git)?\n+$/, ''
+                            .replace /^git@github.com:/, 'https://github.com/'
+                        cb null, url
+                    (url, cb) ->
+                        lines = []
+                        nextline = (line) ->
+                            return if line == ''
+                            line = "    #{line}" unless line[0] == '#'
+                            lines.push line
+                            
+                        gitlog = spawn 'git', [
+                            'log'
+                            '--no-merges'
+                            '--name-only'
+                            '--date=iso'
+                            "--pretty=# %cd %an [%s](#{url}/commit/%H)"
+                            '--'
+                            if dir == '' then '.' else dir
+                        ]
+                        buff = []
+                        gitlog.stdout.on 'data', (data) ->
+                            last = 0
+                            for b, i in data
+                                if b == 10
+                                    buff.push data.slice last, i
+                                    last = i + 1
+                                    line = Buffer.concat(buff.splice 0, buff.length).toString()
+                                    nextline line
+                            buff.push data.slice last, data.length
+                            
+                        gitlog.on 'close', (code) ->
+                            cb new Error(code) unless code == 0
+                            nextline Buffer.concat(buff).toString()
+                            cb null, lines.join '\n'
+                                                    
+                    (stdout, cb) ->
+                        cb null, markdown.toHTML stdout
+                ], cb
+        }
+
     unless d['index.html']
         d['index.html'] = {
             title: 'Index'
@@ -114,7 +166,7 @@ fixDir = (dir) ->
                 html = markdown.toHTML(items.join('\n'))
                 cb null, html
         }
-
+    
 
 loadTemplate = (cb) ->
     async.waterfall [
