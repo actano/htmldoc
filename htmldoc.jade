@@ -1,0 +1,18 @@
+mixin menu(menuItems)
+    ul
+        each item in menuItems
+            li(class=[item.state == 'current' ? 'current' : null, item.children ? 'hasChildren' : null])
+                a(href=item.url)= item.title
+                if item.children
+                    +menu(item.children)
+
+doctype
+html
+    head
+        meta(charset='utf-8')
+        title=title + " | RPLAN - Developer Documentation"
+    body
+        nav
+            +menu([root])
+        article
+            != content
