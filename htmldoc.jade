@@ -1,19 +1,40 @@
-mixin menu(menuItems)
-    ul
-        each item in menuItems
-            li(class=[item.state == 'current' ? 'current' : null, item.children ? 'hasChildren' : null])
-                a(href=item.url)= item.title
-                if item.children
-                    +menu(item.children)
+mixin menu(pages)
+    if pages && pages.length
+        ul
+            each p in pages
+                li
+                    a(href=relative(p))= p.title
+                    if inpath(path, p)
+                        +menu(p.treeChildren())
 
+mixin pagemenu(pages)
+    if pages && pages.length
+        ul
+            each p in pages
+                li
+                    a(href=relative(p))= p.title
+                    if inpath(path, p)
+                        +menu(p.pageChildren())
 doctype
 html
     head
         meta(charset='utf-8')
-        title=title + " | RPLAN - Developer Documentation"
+        title=page.title + " | RPLAN - Developer Documentation"
     body
-        if menuItems && menuItems.length
+        code
+            pre
+                = path
+        if root
             nav
-                +menu(menuItems)
+                +menu(root.treeChildren())
+        
+        - var pages = page.dirChildren()
+        if pages.length
+            nav.pages
+                ul
+                    each p in pages
+                        li
+                            a(href=relative(p))= p.title
+
         article
-            != content
+            != page.content

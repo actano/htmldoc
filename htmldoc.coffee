@@ -16,12 +16,60 @@ class Entry
     constructor: (file) ->
         @url = normalize file
         @dir = relative base, dirname(file)
+        @dir = '.' if @dir == ''
         @file = basename @url
+        if @dir == ''
+            throw file
         tree[@dir] = {} unless tree[@dir]?
         tree[@dir][@file] = @
     
     src: (cb) ->
         cb new Error
+        
+    toString: ->
+        return @url
+        
+    parent: ->
+        unless @file == 'index.html'
+            return tree[@dir]['index.html']
+        
+        return null if @dir == '.'
+
+        parent = dirname @dir
+        return tree[parent]['index.html']
+            
+    children: ->
+        return @treeChildren().concat(@dirChildren())
+        
+    dirChildren: ->
+        return [] unless @file == 'index.html'
+        
+        result = []
+        for name, file of tree[@dir]
+            unless name == 'index.html'
+                result.push file
+        return result
+        
+    treeChildren: ->
+        return [] unless @file == 'index.html'
+        
+        result = []
+
+        for dir, files of tree
+            if dir != '.' && dirname(dir) == @dir
+                result.push files['index.html']
+        return result
+        
+    siblings: ->
+        parent = @parent()
+        return unless parent? then [@] else parent.children()
+    
+    path: ->
+        parent = @parent()
+        return [@] unless parent?
+        result = parent.path()
+        result.push @
+        return result
 
 class FileEntry extends Entry
     constructor: (@srcFile) ->
@@ -29,8 +77,13 @@ class FileEntry extends Entry
         file = basename url
         b = file.toLowerCase()
         if b.substr(-3) == '.md'
-            @title = file.substring(0, b.length - 3)
-            url = join dirname(url), (if b == 'readme.md' then 'index.html' else "#{b.substring(0, b.length - 3)}.html")
+            if b == 'readme.md'
+                @title = basename dirname url
+                file = 'index.html'                
+            else
+                @title = file.substring(0, b.length - 3)
+                file = "#{@title}.html"
+            url = join dirname(url), file
 
         super url
 
@@ -85,7 +138,7 @@ class LogEntry extends Entry
                     '--date=iso'
                     "--pretty=# %cd %an [%s](#{url}/commit/%H)"
                     '--'
-                    if dir == '' then '.' else dir
+                    dir
                 ]
                 buff = []
                 gitlog.stdout.on 'data', (data) ->
@@ -161,17 +214,15 @@ readManifest = (dir, f) ->
             new FileEntry join(dir, f)
 
 locateFiles = (cb) ->
-    console.log "Locating files"
     readDir '.', cb
 
 fixDir = (dir) ->
     unless dir == '.'
         fixDir dirname(dir)
 
-    dir = '' if dir == '.'
     tree[dir] = {} unless tree[dir]?
     d = tree[dir]
-    unless d['commit.html'] || dir == ''
+    unless d['commit.html'] || dir == '.'
         new LogEntry dir
 
     unless d['index.html']
@@ -194,7 +245,17 @@ render = (page, cb) ->
     async.waterfall [
         loadTemplate
         (template, cb) ->
-            cb null, template page
+            cb null, template {
+                page, 
+                path: page.path(), 
+                root: tree['.']['index.html'],
+                
+                inpath: (path, p) ->
+                    return path.indexOf(p) >= 0
+                    
+                relative: (p) ->
+                    relative page.dir, p.url
+                }
     ], cb
 renderQueue = async.queue render, 1
 
@@ -213,20 +274,9 @@ writeFile = (locals, callback) ->
 
 writeQueue = async.queue writeFile, 10
 
-parent = (dir, file) ->
-    return {dir, file: 'index.html'} unless file == 'index.html'
-    return null if dir == ''
-    return {dir: dirname(dir), file: 'index.html'}
-    
-siblings = (dir, file) ->
-
-children = (dir, file) ->
-    return [] unless file == 'index.html'
-    
-    
 locateFiles ->
     for dir of tree
-        fixDir dir
+        fixDir dir        
 
     for dir, files of tree
         for file, locals of files
