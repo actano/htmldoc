@@ -12,33 +12,101 @@ tree = {}
 base = process.cwd()
 root = relative __dirname, base
 
-addFile = (file) ->
-    file = normalize file
-    dir = relative base, dirname(file)
+class Entry
+    constructor: (file) ->
+        @url = normalize file
+        @dir = relative base, dirname(file)
+        @file = basename @url
+        tree[@dir] = {} unless tree[@dir]?
+        tree[@dir][@file] = @
+    
+    src: (cb) ->
+        cb new Error
 
-    entry = {
-        url: file
-        src: (cb) ->
-            async.waterfall [
-                (cb) ->
-                    fs.readFile file, 'utf-8', cb
-                (content, cb) ->
-                    cb null, markdown.toHTML content
-            ], cb
-    }
+class FileEntry extends Entry
+    constructor: (@srcFile) ->
+        url = @srcFile
+        file = basename url
+        b = file.toLowerCase()
+        if b.substr(-3) == '.md'
+            @title = file.substring(0, b.length - 3)
+            url = join dirname(url), (if b == 'readme.md' then 'index.html' else "#{b.substring(0, b.length - 3)}.html")
 
-    url = null
-    b = basename(file).toLowerCase()
-    if b.substr(-3) == '.md'
-        entry.title = basename(file).substring(0, b.length - 3)
-        url = "#{b.substring(0, b.length - 3)}.html"
-        url = 'index.html' if b == 'readme.md'
-        entry.url = join dirname(file), url
+        super url
 
-    tree[dir] = {} unless tree[dir]?
-    tree[dir][basename entry.url] = entry
+    src: (cb) ->
+        srcFile = @srcFile
+        async.waterfall [
+            (cb) =>
+                fs.readFile srcFile, 'utf-8', cb
+            (content, cb) ->
+                cb null, markdown.toHTML content
+        ], cb
 
-
+class IndexEntry extends Entry
+    constructor: (dir) ->
+        super join dir, 'index.html'
+        @title = basename dir
+        
+    src: (cb) ->
+        items = []
+        for url, page of tree[@dir]
+            if page.title?
+                items.push "* [#{page.title}](#{url})"
+        html = markdown.toHTML(items.join('\n'))
+        cb null, html
+    
+class LogEntry extends Entry
+    constructor: (dir) ->
+        super join dir, 'commit.html'
+        @title = 'Commits'
+    
+    src: (cb) ->
+        dir = @dir
+        async.waterfall [
+            (cb) ->
+                exec 'git config remote.origin.url', cb
+            (stdout, stderr, cb) ->
+                url = stdout.toString()
+                    .replace /(.git)?\n+$/, ''
+                    .replace /^git@github.com:/, 'https://github.com/'
+                cb null, url
+            (url, cb) ->
+                lines = []
+                nextline = (line) ->
+                    return if line == ''
+                    line = "    #{line}" unless line[0] == '#'
+                    lines.push line
+                    
+                gitlog = spawn 'git', [
+                    'log'
+                    '--no-merges'
+                    '--name-only'
+                    '--date=iso'
+                    "--pretty=# %cd %an [%s](#{url}/commit/%H)"
+                    '--'
+                    if dir == '' then '.' else dir
+                ]
+                buff = []
+                gitlog.stdout.on 'data', (data) ->
+                    last = 0
+                    for b, i in data
+                        if b == 10
+                            buff.push data.slice last, i
+                            last = i + 1
+                            line = Buffer.concat(buff.splice 0, buff.length).toString()
+                            nextline line
+                    buff.push data.slice last, data.length
+                    
+                gitlog.on 'close', (code) ->
+                    cb new Error(code) unless code == 0
+                    nextline Buffer.concat(buff).toString()
+                    cb null, lines.join '\n'
+                                            
+            (stdout, cb) ->
+                cb null, markdown.toHTML stdout
+        ], cb
+        
 readDir = (dir, cb) ->
     fs.readdir dir, (err, files) ->
         throw err if err?
@@ -70,7 +138,7 @@ readDir = (dir, cb) ->
                 continue
 
             if name.substr(-3) == ".md"
-                addFile join(dir, f)
+                new FileEntry join(dir, f)
                 continue
 
             countdown++
@@ -90,12 +158,11 @@ readManifest = (dir, f) ->
     docs = require(join root, dir, f).documentation
     if docs?
         for f in docs
-            addFile join(dir, f)
+            new FileEntry join(dir, f)
 
 locateFiles = (cb) ->
     console.log "Locating files"
     readDir '.', cb
-
 
 fixDir = (dir) ->
     unless dir == '.'
@@ -105,68 +172,10 @@ fixDir = (dir) ->
     tree[dir] = {} unless tree[dir]?
     d = tree[dir]
     unless d['commit.html'] || dir == ''
-        d['commit.html'] = {
-            title: 'Commits'
-            url: join dir, 'commit.html'
-            src: (cb) ->
-                async.waterfall [
-                    (cb) ->
-                        exec 'git config remote.origin.url', cb
-                    (stdout, stderr, cb) ->
-                        url = stdout.toString()
-                            .replace /(.git)?\n+$/, ''
-                            .replace /^git@github.com:/, 'https://github.com/'
-                        cb null, url
-                    (url, cb) ->
-                        lines = []
-                        nextline = (line) ->
-                            return if line == ''
-                            line = "    #{line}" unless line[0] == '#'
-                            lines.push line
-                            
-                        gitlog = spawn 'git', [
-                            'log'
-                            '--no-merges'
-                            '--name-only'
-                            '--date=iso'
-                            "--pretty=# %cd %an [%s](#{url}/commit/%H)"
-                            '--'
-                            if dir == '' then '.' else dir
-                        ]
-                        buff = []
-                        gitlog.stdout.on 'data', (data) ->
-                            last = 0
-                            for b, i in data
-                                if b == 10
-                                    buff.push data.slice last, i
-                                    last = i + 1
-                                    line = Buffer.concat(buff.splice 0, buff.length).toString()
-                                    nextline line
-                            buff.push data.slice last, data.length
-                            
-                        gitlog.on 'close', (code) ->
-                            cb new Error(code) unless code == 0
-                            nextline Buffer.concat(buff).toString()
-                            cb null, lines.join '\n'
-                                                    
-                    (stdout, cb) ->
-                        cb null, markdown.toHTML stdout
-                ], cb
-        }
+        new LogEntry dir
 
     unless d['index.html']
-        d['index.html'] = {
-            title: 'Index'
-            url: join dir, 'index.html'
-            src: (cb) ->
-                items = []
-                for url, page of d
-                    if page.title?
-                        items.push "* [#{page.title}](#{url})"
-                html = markdown.toHTML(items.join('\n'))
-                cb null, html
-        }
-    
+        new IndexEntry dir    
 
 loadTemplate = (cb) ->
     async.waterfall [
@@ -191,7 +200,8 @@ renderQueue = async.queue render, 1
 
 writeFile = (locals, callback) ->
     async.waterfall [
-        locals.src
+        (cb) ->
+            locals.src cb
         (html, cb) ->
             locals.content = html
             mkdirp dirname(locals.out), cb
@@ -203,8 +213,19 @@ writeFile = (locals, callback) ->
 
 writeQueue = async.queue writeFile, 10
 
+parent = (dir, file) ->
+    return {dir, file: 'index.html'} unless file == 'index.html'
+    return null if dir == ''
+    return {dir: dirname(dir), file: 'index.html'}
+    
+siblings = (dir, file) ->
+
+children = (dir, file) ->
+    return [] unless file == 'index.html'
+    
+    
 locateFiles ->
-    for dir, files of tree
+    for dir of tree
         fixDir dir
 
     for dir, files of tree

@@ -12,7 +12,8 @@ html
         meta(charset='utf-8')
         title=title + " | RPLAN - Developer Documentation"
     body
-        nav
-            +menu([root])
+        if menuItems && menuItems.length
+            nav
+                +menu(menuItems)
         article
             != content
