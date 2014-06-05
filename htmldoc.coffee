@@ -7,6 +7,7 @@ mkdirp = require 'mkdirp'
 async = require 'async'
 util = require 'util'
 template = null
+title = 'RPLAN - Developer Documentation'
 
 tree = {}
 base = process.cwd()
@@ -249,6 +250,7 @@ render = (page, cb) ->
                 page, 
                 path: page.path(), 
                 root: tree['.']['index.html'],
+                title,
                 
                 inpath: (path, p) ->
                     return path.indexOf(p) >= 0
