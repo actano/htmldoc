@@ -18,6 +18,10 @@ class Directory
         @name = basename @dir    
         @files = {}
 
+getDir = (dir) ->
+    tree[dir] = new Directory(dir) unless tree[dir]?
+    return tree[dir]
+    
 comparePages = (a,b) ->
     return -1 if a.file == 'index.html' || !a.title?
     return 1 if b.file == 'index.html' || !b.title?
@@ -33,8 +37,8 @@ class Entry
         @file = basename @url
         if @dir == ''
             throw file
-        tree[@dir] = new Directory(@dir) unless tree[@dir]?
-        tree[@dir].files[@file] = @
+        d = getDir(@dir)
+        d.files[@file] = @
     
     src: (cb) ->
         cb new Error
@@ -233,12 +237,11 @@ fixDir = (dir) ->
     unless dir == '.'
         fixDir dirname(dir)
 
-    tree[dir] = new Directory(dir) unless tree[dir]?
-    d = tree[dir].files
-    unless d['commit.html'] || dir == '.'
+    d = getDir dir
+    unless d.files['commit.html'] || dir == '.'
         new LogEntry dir
 
-    unless d['index.html']
+    unless d.files['index.html']
         new IndexEntry dir    
 
 loadTemplate = (cb) ->
