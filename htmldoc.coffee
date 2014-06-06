@@ -17,11 +17,13 @@ class Directory
     constructor: (@dir) ->
         @name = basename @dir    
         @files = {}
+        @children = {}
         tree[@dir] = @
-        new IndexEntry @dir    
+        new IndexEntry @dir
 
         unless @dir == '.'
-            @parent = getDir dirname @dir
+            @parentDir = getDir dirname @dir
+            @parentDir.children[@name] = @
             new LogEntry @dir
             
     toString: ->
@@ -43,7 +45,8 @@ class Entry
         @dir = relative base, dirname(@url)
         @dir = '.' if @dir == ''
         @file = basename @url
-        getDir(@dir).files[@file] = @
+        @parentDir = getDir @dir
+        @parentDir.files[@file] = @
     
     src: (cb) ->
         cb new Error
