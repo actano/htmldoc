@@ -13,6 +13,18 @@ tree = {}
 base = process.cwd()
 root = relative __dirname, base
 
+class Directory
+    constructor: (@dir) ->
+        @name = basename @dir    
+        @files = {}
+
+comparePages = (a,b) ->
+    return -1 if a.file == 'index.html' || !a.title?
+    return 1 if b.file == 'index.html' || !b.title?
+    return -1 if a.title < b.title
+    return 1 if a.title > b.title
+    return 0
+
 class Entry
     constructor: (file) ->
         @url = normalize file
@@ -21,8 +33,8 @@ class Entry
         @file = basename @url
         if @dir == ''
             throw file
-        tree[@dir] = {} unless tree[@dir]?
-        tree[@dir][@file] = @
+        tree[@dir] = new Directory(@dir) unless tree[@dir]?
+        tree[@dir].files[@file] = @
     
     src: (cb) ->
         cb new Error
@@ -32,12 +44,12 @@ class Entry
         
     parent: ->
         unless @file == 'index.html'
-            return tree[@dir]['index.html']
+            return tree[@dir].files['index.html']
         
         return null if @dir == '.'
 
         parent = dirname @dir
-        return tree[parent]['index.html']
+        return tree[parent].files['index.html']
             
     children: ->
         return @treeChildren().concat(@dirChildren())
@@ -46,7 +58,7 @@ class Entry
         return [] unless @file == 'index.html'
         
         result = []
-        for name, file of tree[@dir]
+        for name, file of tree[@dir].files
             unless name == 'index.html'
                 result.push file
         return result
@@ -56,9 +68,9 @@ class Entry
         
         result = []
 
-        for dir, files of tree
+        for dir, d of tree
             if dir != '.' && dirname(dir) == @dir
-                result.push files['index.html']
+                result.push d.files['index.html']
         return result
         
     siblings: ->
@@ -104,7 +116,7 @@ class IndexEntry extends Entry
         
     src: (cb) ->
         items = []
-        for url, page of tree[@dir]
+        for url, page of tree[@dir].files
             if page.title?
                 items.push "* [#{page.title}](#{url})"
         html = markdown.toHTML(items.join('\n'))
@@ -221,8 +233,8 @@ fixDir = (dir) ->
     unless dir == '.'
         fixDir dirname(dir)
 
-    tree[dir] = {} unless tree[dir]?
-    d = tree[dir]
+    tree[dir] = new Directory(dir) unless tree[dir]?
+    d = tree[dir].files
     unless d['commit.html'] || dir == '.'
         new LogEntry dir
 
@@ -239,6 +251,7 @@ loadTemplate = (cb) ->
             loadTemplate = (cb) ->
                 cb null, template
             loadTemplate cb
+            renderQueue.worker = 5
     ], cb
 
 render = (page, cb) ->
@@ -246,18 +259,27 @@ render = (page, cb) ->
     async.waterfall [
         loadTemplate
         (template, cb) ->
+            siblings = []
+            for name, p of tree[page.dir].files
+                siblings.push p
+            siblings.sort comparePages
+                
             cb null, template {
-                page, 
-                path: page.path(), 
-                root: tree['.']['index.html'],
-                title,
+                page
+                path: page.path()
+                root: tree['.'].files['index.html']
+                siblings
+                title
                 
                 inpath: (path, p) ->
                     return path.indexOf(p) >= 0
                     
                 relative: (p) ->
                     relative page.dir, p.url
+                    
                 }
+                
+                
     ], cb
 renderQueue = async.queue render, 1
 
@@ -278,10 +300,10 @@ writeQueue = async.queue writeFile, 10
 
 locateFiles ->
     for dir of tree
-        fixDir dir        
+        fixDir dir
 
-    for dir, files of tree
-        for file, locals of files
+    for dir, d of tree
+        for file, locals of d.files
             locals.out = join('build', 'htmldoc', dir, file)
             writeQueue.push locals, (err) ->
                 throw err if err?

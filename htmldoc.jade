@@ -18,11 +18,10 @@ html
                 a(href=relative(root))= title                    
             +menu(root.treeChildren())
         
-        - var pages = page.dirChildren()
-        if pages.length
+        if siblings && siblings.length
             nav.pages
                 ul
-                    each p in pages
+                    each p in siblings
                         li
                             a(href=relative(p))= p.title
 
