@@ -17,10 +17,19 @@ class Directory
     constructor: (@dir) ->
         @name = basename @dir    
         @files = {}
+        tree[@dir] = @
+        new IndexEntry @dir    
+
+        unless @dir == '.'
+            @parent = getDir dirname @dir
+            new LogEntry @dir
+            
+    toString: ->
+        @dir
 
 getDir = (dir) ->
-    tree[dir] = new Directory(dir) unless tree[dir]?
-    return tree[dir]
+    return tree[dir] if tree[dir]?
+    return new Directory(dir)
     
 comparePages = (a,b) ->
     return -1 if a.file == 'index.html' || !a.title?
@@ -30,15 +39,11 @@ comparePages = (a,b) ->
     return 0
 
 class Entry
-    constructor: (file) ->
-        @url = normalize file
-        @dir = relative base, dirname(file)
+    constructor: (@url) ->
+        @dir = relative base, dirname(@url)
         @dir = '.' if @dir == ''
         @file = basename @url
-        if @dir == ''
-            throw file
-        d = getDir(@dir)
-        d.files[@file] = @
+        getDir(@dir).files[@file] = @
     
     src: (cb) ->
         cb new Error
@@ -228,21 +233,11 @@ readManifest = (dir, f) ->
     docs = require(join root, dir, f).documentation
     if docs?
         for f in docs
-            new FileEntry join(dir, f)
+            path = join(dir, f)
+            new FileEntry path
 
 locateFiles = (cb) ->
     readDir '.', cb
-
-fixDir = (dir) ->
-    unless dir == '.'
-        fixDir dirname(dir)
-
-    d = getDir dir
-    unless d.files['commit.html'] || dir == '.'
-        new LogEntry dir
-
-    unless d.files['index.html']
-        new IndexEntry dir    
 
 loadTemplate = (cb) ->
     async.waterfall [
@@ -302,9 +297,6 @@ writeFile = (locals, callback) ->
 writeQueue = async.queue writeFile, 10
 
 locateFiles ->
-    for dir of tree
-        fixDir dir
-
     for dir, d of tree
         for file, locals of d.files
             locals.out = join('build', 'htmldoc', dir, file)
