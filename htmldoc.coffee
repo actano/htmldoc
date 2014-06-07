@@ -267,9 +267,13 @@ render = (page, cb) ->
                 siblings.push p
             siblings.sort comparePages
                 
+            path = page.path()
+            navigation = (p.treeChildren() for p in path)
+            
             cb null, template {
                 page
-                path: page.path()
+                path
+                navigation
                 root: tree['.'].files['index.html']
                 siblings
                 title

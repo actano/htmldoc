@@ -1,11 +1,12 @@
-mixin menu(pages)
+mixin menu(level)
+    - var pages = navigation[level]
     if pages && pages.length
         ul
             each p in pages
                 li
                     a(href=relative(p))= p.title
-                    if inpath(path, p)
-                        +menu(p.treeChildren())
+                    if level < navigation.length && inpath(path, p)
+                        +menu(level + 1)
 
 doctype
 html
@@ -16,7 +17,7 @@ html
         nav
             h1
                 a(href=relative(root))= title                    
-            +menu(root.treeChildren())
+            +menu(0)
         
         if siblings && siblings.length
             nav.pages
