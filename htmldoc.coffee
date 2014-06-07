@@ -19,12 +19,12 @@ class Directory
         @files = {}
         @children = {}
         tree[@dir] = @
-        new IndexEntry @dir
+        new IndexEntry @
 
         unless @dir == '.'
             @parentDir = getDir dirname @dir
             @parentDir.children[@name] = @
-            new LogEntry @dir
+            new LogEntry @
     
     index: ->
         @files['index.html']
@@ -53,11 +53,10 @@ comparePages = (a,b) ->
     return a.file.localeCompare b.file
 
 class Entry
-    constructor: (@url) ->
+    constructor: (@parentDir, @url) ->
         @dir = relative base, dirname(@url)
         @dir = '.' if @dir == ''
         @file = basename @url
-        @parentDir = getDir @dir
         @parentDir.files[@file] = @
     
     src: (cb) ->
@@ -129,7 +128,7 @@ class Entry
         return result
 
 class FileEntry extends Entry
-    constructor: (@srcFile) ->
+    constructor: (parentDir, @srcFile) ->
         url = @srcFile
         file = basename url
         b = file.toLowerCase()
@@ -142,7 +141,7 @@ class FileEntry extends Entry
                 file = "#{@title}.html"
             url = join dirname(url), file
 
-        super url
+        super parentDir, url
 
     src: (cb) ->
         srcFile = @srcFile
@@ -154,9 +153,9 @@ class FileEntry extends Entry
         ], cb
 
 class IndexEntry extends Entry
-    constructor: (dir) ->
-        super join dir, 'index.html'
-        @title = basename dir
+    constructor: (parentDir) ->
+        super parentDir, join parentDir.dir, 'index.html'
+        @title = basename parentDir.name
         
     src: (cb) ->
         items = []
@@ -167,8 +166,8 @@ class IndexEntry extends Entry
         cb null, html
     
 class LogEntry extends Entry
-    constructor: (dir) ->
-        super join dir, 'commit.html'
+    constructor: (parentDir) ->
+        super parentDir, join parentDir.dir, 'commit.html'
         @title = 'Commits'
     
     src: (cb) ->
@@ -248,7 +247,7 @@ readDir = (dir, cb) ->
                 continue
 
             if name.substr(-3) == ".md"
-                new FileEntry join(dir, f)
+                new FileEntry getDir(dir), join(dir, f)
                 continue
 
             countdown++
@@ -269,7 +268,7 @@ readManifest = (dir, f) ->
     if docs?
         for f in docs
             path = join(dir, f)
-            new FileEntry path
+            new FileEntry getDir(dir), path
 
 locateFiles = (cb) ->
     readDir '.', cb
