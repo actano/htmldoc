@@ -198,11 +198,11 @@ class LogEntry extends Entry
                 cb null, markdown.toHTML stdout
         ], cb
         
-readDir = (dir, cb) ->
-    fs.readdir dir, (err, files) ->
+readDir = (_dir, cb) ->
+    fs.readdir _dir.dir, (err, files) ->
         throw err if err?
 
-        if scanManifest dir, files
+        if scanManifest _dir, files
             cb()
             return
 
@@ -216,7 +216,7 @@ readDir = (dir, cb) ->
             fs.stat file, (err, stats) ->
                 throw err if err?
                 if stats.isDirectory()
-                    readDir file, callback
+                    readDir getDir(file), callback
                     return
                 callback()
 
@@ -229,12 +229,12 @@ readDir = (dir, cb) ->
                 continue
 
             if name.substr(-3) == ".md"
-                new FileEntry getDir(dir), join(dir, f)
+                new FileEntry _dir, join(_dir.dir, f)
                 continue
 
             countdown++
 
-            stat join(dir, f)
+            stat join(_dir.dir, f)
 
         callback()
 
@@ -245,15 +245,12 @@ scanManifest = (dir, files) ->
             return true
     return false
 
-readManifest = (dir, f) ->
-    docs = require(join root, dir, f).documentation
+readManifest = (_dir, f) ->
+    docs = require(join root, _dir.dir, f).documentation
     if docs?
         for f in docs
-            path = join(dir, f)
-            new FileEntry getDir(dir), path
-
-locateFiles = (cb) ->
-    readDir '.', cb
+            path = join(_dir.dir, f)
+            new FileEntry _dir, path
 
 loadTemplate = (cb) ->
     async.waterfall [
@@ -292,7 +289,7 @@ writeFile = (locals, callback) ->
 
 writeQueue = async.queue writeFile, 10
 
-locateFiles ->
+readDir new Directory('.'), ->
     for dir, d of tree
         for file, locals of d.files
             locals.out = join('build', 'htmldoc', dir, file)
