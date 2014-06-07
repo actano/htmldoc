@@ -9,20 +9,17 @@ util = require 'util'
 template = null
 title = 'RPLAN - Developer Documentation'
 
-tree = {}
 base = process.cwd()
 root = relative __dirname, base
 
 class Directory
-    constructor: (@dir) ->
+    constructor: (@parentDir, @dir) ->
         @name = basename @dir    
         @files = {}
         @children = {}
-        tree[@dir] = @
         new IndexEntry @
 
-        unless @dir == '.'
-            @parentDir = getDir dirname @dir
+        if @parentDir?
             @parentDir.children[@name] = @
             new LogEntry @
     
@@ -64,7 +61,7 @@ class Directory
                 fs.stat file, (err, stats) ->
                     throw err if err?
                     if stats.isDirectory()
-                        getDir(file).readDir callback
+                        new Directory(_dir, file).readDir callback
                         return
                     callback()
     
@@ -85,11 +82,7 @@ class Directory
                 stat join(_dir.dir, f)
     
             callback()
-                
-getDir = (dir) ->
-    return tree[dir] if tree[dir]?
-    return new Directory(dir)
-    
+
 # Order: Indexfiles, Title (locale), Filename
 
 comparePages = (a,b) ->
@@ -128,7 +121,7 @@ class Entry
         return {
             page: @
             navigation
-            root: tree['.'].index()
+            root: rootDir.index()
             siblings
             title
             
@@ -289,9 +282,16 @@ writeFile = (locals, callback) ->
 
 writeQueue = async.queue writeFile, 10
 
-new Directory('.').readDir ->
-    for dir, d of tree
-        for file, locals of d.files
-            locals.out = join('build', 'htmldoc', dir, file)
-            writeQueue.push locals, (err) ->
-                throw err if err?
+writeDirectory = (dir) ->
+    for file, locals of dir.files
+        locals.out = join('build', 'htmldoc', locals.url)
+        writeQueue.push locals, (err) ->
+            throw err if err?
+    
+    for name, child of dir.children
+        writeDirectory child
+
+rootDir = new Directory(undefined, '.')
+
+rootDir.readDir ->
+    writeDirectory rootDir
