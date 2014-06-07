@@ -93,18 +93,6 @@ class Entry
         return null unless @parentDir.parentDir
         return @parentDir.parentDir.index()
             
-    children: ->
-        return @treeChildren().concat(@dirChildren())
-        
-    dirChildren: ->
-        return [] unless @file == 'index.html'
-        
-        result = []
-        for name, file of tree[@dir].files
-            unless name == 'index.html'
-                result.push file
-        return result
-        
     treeChildren: ->        
         return [] unless @ == @parentDir.index()
         
@@ -114,10 +102,6 @@ class Entry
             result.push dir.index()
         return result
         
-    siblings: ->
-        parent = @parent()
-        return unless parent? then [@] else parent.children()
-    
     path: ->
         parent = @parent()
         return [@] unless parent?
