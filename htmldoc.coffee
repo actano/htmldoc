@@ -36,12 +36,21 @@ getDir = (dir) ->
     return tree[dir] if tree[dir]?
     return new Directory(dir)
     
+# Order: Indexfiles, Title (locale), Filename
+
 comparePages = (a,b) ->
-    return -1 if a.file == 'index.html' || !a.title?
-    return 1 if b.file == 'index.html' || !b.title?
-    return -1 if a.title < b.title
-    return 1 if a.title > b.title
-    return 0
+    aindex = a.parentDir.index() == a
+    bindex = b.parentDir.index() == b
+    return -1 if aindex && !bindex
+    return 1 if bindex && !aindex
+    if a.title? && b.title?
+        result = a.title.localeCompare b.title
+        return result unless result == 0
+    else
+        return -1 if !b.title?
+        return 1 if !a.title?
+        
+    return a.file.localeCompare b.file
 
 class Entry
     constructor: (@url) ->
@@ -268,13 +277,13 @@ render = (page, cb) ->
             siblings.sort comparePages
                 
             path = page.path()
-            navigation = (p.treeChildren() for p in path)
+            navigation = ((p.treeChildren().sort comparePages) for p in path)
             
             cb null, template {
                 page
                 path
                 navigation
-                root: tree['.'].files['index.html']
+                root: tree['.'].index()
                 siblings
                 title
                 
