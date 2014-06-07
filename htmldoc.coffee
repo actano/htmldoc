@@ -32,6 +32,12 @@ class Directory
     toString: ->
         @dir
 
+    readManifest: (f) ->
+        docs = require(join root, @dir, f).documentation
+        if docs?
+            for f in docs
+                new FileEntry @, join(@dir, f)
+
 getDir = (dir) ->
     return tree[dir] if tree[dir]?
     return new Directory(dir)
@@ -241,16 +247,9 @@ readDir = (_dir, cb) ->
 scanManifest = (dir, files) ->
     for f in files
         if f.toLowerCase() == 'manifest.coffee'
-            readManifest dir, f
+            dir.readManifest f
             return true
     return false
-
-readManifest = (_dir, f) ->
-    docs = require(join root, _dir.dir, f).documentation
-    if docs?
-        for f in docs
-            path = join(_dir.dir, f)
-            new FileEntry _dir, path
 
 loadTemplate = (cb) ->
     async.waterfall [
