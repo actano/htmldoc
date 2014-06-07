@@ -54,8 +54,6 @@ comparePages = (a,b) ->
 
 class Entry
     constructor: (@parentDir, @url) ->
-        @dir = relative base, dirname(@url)
-        @dir = '.' if @dir == ''
         @file = basename @url
         @parentDir.files[@file] = @
     
@@ -66,7 +64,7 @@ class Entry
         return @url
         
     templateData: ->
-        dir = @dir
+        dir = @parentDir.dir
         siblings = (p for name, p of @parentDir.files)
         siblings.sort comparePages
             
@@ -159,7 +157,7 @@ class IndexEntry extends Entry
         
     src: (cb) ->
         items = []
-        for url, page of tree[@dir].files
+        for url, page of @parentDir.files
             if page.title?
                 items.push "* [#{page.title}](#{url})"
         html = markdown.toHTML(items.join('\n'))
@@ -171,7 +169,7 @@ class LogEntry extends Entry
         @title = 'Commits'
     
     src: (cb) ->
-        dir = @dir
+        dir = @parentDir.dir
         async.waterfall [
             (cb) ->
                 exec 'git config remote.origin.url', cb
