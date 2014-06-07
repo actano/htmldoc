@@ -45,6 +45,47 @@ class Directory
             for f in docs
                 new FileEntry @, join(@dir, f)
 
+    readDir: (cb) ->
+        _dir = @
+        fs.readdir @dir, (err, files) ->
+            throw err if err?
+    
+            if _dir.scanManifest files
+                cb()
+                return
+    
+            countdown = 1
+            callback = ->
+                countdown--
+                if countdown == 0
+                    cb()
+    
+            stat = (file) ->
+                fs.stat file, (err, stats) ->
+                    throw err if err?
+                    if stats.isDirectory()
+                        getDir(file).readDir callback
+                        return
+                    callback()
+    
+            for f in files
+                if f.substring(0, 1) == '.'
+                    continue
+    
+                name = f.toLowerCase()
+                if name == 'build' or name == 'node_modules'
+                    continue
+    
+                if name.substr(-3) == ".md"
+                    new FileEntry _dir, join(_dir.dir, f)
+                    continue
+    
+                countdown++
+    
+                stat join(_dir.dir, f)
+    
+            callback()
+                
 getDir = (dir) ->
     return tree[dir] if tree[dir]?
     return new Directory(dir)
@@ -211,46 +252,6 @@ class LogEntry extends Entry
                 cb null, markdown.toHTML stdout
         ], cb
         
-readDir = (_dir, cb) ->
-    fs.readdir _dir.dir, (err, files) ->
-        throw err if err?
-
-        if _dir.scanManifest files
-            cb()
-            return
-
-        countdown = 1
-        callback = ->
-            countdown--
-            if countdown == 0
-                cb()
-
-        stat = (file) ->
-            fs.stat file, (err, stats) ->
-                throw err if err?
-                if stats.isDirectory()
-                    readDir getDir(file), callback
-                    return
-                callback()
-
-        for f in files
-            if f.substring(0, 1) == '.'
-                continue
-
-            name = f.toLowerCase()
-            if name == 'build' or name == 'node_modules'
-                continue
-
-            if name.substr(-3) == ".md"
-                new FileEntry _dir, join(_dir.dir, f)
-                continue
-
-            countdown++
-
-            stat join(_dir.dir, f)
-
-        callback()
-
 loadTemplate = (cb) ->
     async.waterfall [
         (cb) ->
@@ -288,7 +289,7 @@ writeFile = (locals, callback) ->
 
 writeQueue = async.queue writeFile, 10
 
-readDir new Directory('.'), ->
+new Directory('.').readDir ->
     for dir, d of tree
         for file, locals of d.files
             locals.out = join('build', 'htmldoc', dir, file)
