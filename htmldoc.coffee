@@ -271,9 +271,7 @@ render = (page, cb) ->
     async.waterfall [
         loadTemplate
         (template, cb) ->
-            siblings = []
-            for name, p of tree[page.dir].files
-                siblings.push p
+            siblings = (p for name, p of tree[page.dir].files)
             siblings.sort comparePages
                 
             path = page.path()
@@ -281,13 +279,12 @@ render = (page, cb) ->
             
             cb null, template {
                 page
-                path
                 navigation
                 root: tree['.'].index()
                 siblings
                 title
                 
-                inpath: (path, p) ->
+                inpath: (p) ->
                     return path.indexOf(p) >= 0
                     
                 relative: (p) ->
