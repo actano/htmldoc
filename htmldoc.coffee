@@ -25,6 +25,9 @@ class Directory
             @parentDir = getDir dirname @dir
             @parentDir.children[@name] = @
             new LogEntry @dir
+    
+    index: ->
+        @files['index.html']
             
     toString: ->
         @dir
@@ -75,14 +78,13 @@ class Entry
                 result.push file
         return result
         
-    treeChildren: ->
-        return [] unless @file == 'index.html'
+    treeChildren: ->        
+        return [] unless @ == @parentDir.index()
         
         result = []
 
-        for dir, d of tree
-            if dir != '.' && dirname(dir) == @dir
-                result.push d.files['index.html']
+        for name, dir of @parentDir.children
+            result.push dir.index()
         return result
         
     siblings: ->
