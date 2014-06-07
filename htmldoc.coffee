@@ -66,6 +66,29 @@ class Entry
     toString: ->
         return @url
         
+    templateData: ->
+        dir = @dir
+        siblings = (p for name, p of @parentDir.files)
+        siblings.sort comparePages
+            
+        path = @path()
+        navigation = ((p.treeChildren().sort comparePages) for p in path)
+        
+        return {
+            page: @
+            navigation
+            root: tree['.'].index()
+            siblings
+            title
+            
+            inpath: (p) ->
+                return path.indexOf(p) >= 0
+                
+            relative: (p) ->
+                relative dir, p.url
+                
+            }
+        
     parent: ->        
         unless @file == 'index.html'
             return @parentDir.index()
@@ -269,28 +292,7 @@ render = (page, cb) ->
     async.waterfall [
         loadTemplate
         (template, cb) ->
-            siblings = (p for name, p of tree[page.dir].files)
-            siblings.sort comparePages
-                
-            path = page.path()
-            navigation = ((p.treeChildren().sort comparePages) for p in path)
-            
-            cb null, template {
-                page
-                navigation
-                root: tree['.'].index()
-                siblings
-                title
-                
-                inpath: (p) ->
-                    return path.indexOf(p) >= 0
-                    
-                relative: (p) ->
-                    relative page.dir, p.url
-                    
-                }
-                
-                
+            cb null, template page.templateData()
     ], cb
 renderQueue = async.queue render, 1
 
