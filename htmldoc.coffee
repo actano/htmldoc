@@ -32,6 +32,13 @@ class Directory
     toString: ->
         @dir
 
+    scanManifest: (files) ->
+        for f in files
+            if f.toLowerCase() == 'manifest.coffee'
+                @readManifest f
+                return true
+        return false
+    
     readManifest: (f) ->
         docs = require(join root, @dir, f).documentation
         if docs?
@@ -208,7 +215,7 @@ readDir = (_dir, cb) ->
     fs.readdir _dir.dir, (err, files) ->
         throw err if err?
 
-        if scanManifest _dir, files
+        if _dir.scanManifest files
             cb()
             return
 
@@ -243,13 +250,6 @@ readDir = (_dir, cb) ->
             stat join(_dir.dir, f)
 
         callback()
-
-scanManifest = (dir, files) ->
-    for f in files
-        if f.toLowerCase() == 'manifest.coffee'
-            dir.readManifest f
-            return true
-    return false
 
 loadTemplate = (cb) ->
     async.waterfall [
