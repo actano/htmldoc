@@ -66,14 +66,12 @@ class Entry
     toString: ->
         return @url
         
-    parent: ->
+    parent: ->        
         unless @file == 'index.html'
-            return tree[@dir].files['index.html']
+            return @parentDir.index()
         
-        return null if @dir == '.'
-
-        parent = dirname @dir
-        return tree[parent].files['index.html']
+        return null unless @parentDir.parentDir
+        return @parentDir.parentDir.index()
             
     children: ->
         return @treeChildren().concat(@dirChildren())
