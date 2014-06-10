@@ -239,17 +239,20 @@ class LogEntry extends Entry
                 cb null, markdown.toHTML stdout
         ], cb
         
+template = null
 loadTemplate = (cb) ->
+    if template?
+        cb null, template 
+        return
+
     async.waterfall [
         (cb) ->
             fs.readFile "#{__dirname}/htmldoc.jade", 'utf-8', cb
         (data, cb) ->
-            jade = require('jade') unless jade?
+            jade = require('jade')
             template = jade.compile data
-            loadTemplate = (cb) ->
-                cb null, template
-            loadTemplate cb
             writeQueue.worker = 5
+            cb null, template
     ], cb
 
 writeQueue = async.queue (locals, callback) ->
@@ -270,7 +273,7 @@ writeQueue = async.queue (locals, callback) ->
         ], (err) ->
             throw err if err?
             callback()
-    , 10
+    , 1
 
 writeDirectory = (dir) ->
     for file, locals of dir.files
