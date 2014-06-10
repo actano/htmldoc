@@ -137,9 +137,6 @@ class AbstractPage
         return null unless @parentDir.parentDir
         return @parentDir.parentDir.index()
             
-    treeChildren: ->        
-        return @parentDir.treeChildren
-        
     path: ->
         parent = @parent()
         return [@] unless parent?
@@ -252,7 +249,7 @@ writeQueue = async.queue (locals, callback) ->
                 cb null            
             (cb) ->
                 path = locals.path()
-                navigation = (p.treeChildren() for p in path)
+                navigation = (p.parentDir.treeChildren for p in path)
                 locals.templateData path, navigation, cb
             (templateData, cb) ->
                 locals.src (err, html) ->
