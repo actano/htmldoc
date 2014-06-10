@@ -253,31 +253,29 @@ loadTemplate = (cb) ->
     ], cb
 
 render = (page, cb) ->
-    jade = require('jade') unless jade?
     async.waterfall [
         loadTemplate
         (template, cb) ->
             cb null, template page.templateData()
     ], cb
 
-writeFile = (locals, callback) ->
-    out = join('build', 'htmldoc', locals.url)
-    
-    async.waterfall [
-        (cb) ->
-            locals.src cb
-        (html, cb) ->
-            locals.content = html
-            mkdirp dirname(out), cb
-        (made, cb) ->
-            render locals, cb
-        (page, cb) ->
-            fs.writeFile out, page, cb
-    ], (err) ->
-        throw err if err?
-        callback()
-
-writeQueue = async.queue writeFile, 10
+writeQueue = async.queue (locals, callback) ->
+        out = join('build', 'htmldoc', locals.url)
+        
+        async.waterfall [
+            (cb) ->
+                locals.src cb
+            (html, cb) ->
+                locals.content = html
+                mkdirp dirname(out), cb
+            (made, cb) ->
+                render locals, cb
+            (page, cb) ->
+                fs.writeFile out, page, cb
+        ], (err) ->
+            throw err if err?
+            callback()
+    , 10
 
 writeDirectory = (dir) ->
     for file, locals of dir.files
