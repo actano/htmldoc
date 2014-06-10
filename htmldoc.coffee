@@ -47,7 +47,7 @@ class Directory
             for f in docs
                 new MarkdownPage @, join(@dir, f)
 
-    readDir: (cb) ->
+    readDir: (cb, pageCallback) ->
         fs.readdir @dir, (err, files) =>
             cb(err) if err?
     
@@ -84,8 +84,7 @@ class Directory
                     dir: @
                     name: f
 
-            for file, locals of @files
-                writeQueue.push locals, throwError
+            pageCallback null, page for n, page of @files
 
 # Order: Indexfiles, Title (locale), Filename
 
@@ -279,7 +278,10 @@ writeQueue = async.queue (locals, callback) ->
 dirQueue = async.queue (dir, cb) ->
         async.waterfall [
             (cb) ->
-                dir.readDir cb
+                dir.readDir cb, (err, pages) ->
+                    cb err if err?
+                    writeQueue.push pages, throwError
+                    
             (cb) ->
                 for name, child of dir.children
                     dirQueue.push child, throwError
