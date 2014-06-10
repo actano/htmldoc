@@ -121,7 +121,7 @@ class Entry
         return {
             page: @
             navigation
-            root: rootDir.index()
+            root: path[0]
             siblings
             title
             
@@ -143,11 +143,7 @@ class Entry
     treeChildren: ->        
         return [] unless @ == @parentDir.index()
         
-        result = []
-
-        for name, dir of @parentDir.children
-            result.push dir.index()
-        return result
+        return (dir.index() for name, dir of @parentDir.children)
         
     path: ->
         parent = @parent()
