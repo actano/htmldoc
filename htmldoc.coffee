@@ -261,8 +261,10 @@ writeQueue = async.queue (locals, callback) ->
                     template = jade.compile data
                     writeQueue.worker = 5
                 cb null, template
-            (template, cb) ->
-                cb null, template locals.templateData()
+            (data, cb) ->
+                cb null, locals.templateData()
+            (templateData, cb) ->
+                cb null, template templateData
             (page, cb) ->
                 fs.writeFile out, page, cb
         ], (err) ->
