@@ -240,20 +240,6 @@ class LogEntry extends Entry
         ], cb
         
 template = null
-loadTemplate = (cb) ->
-    if template?
-        cb null, template 
-        return
-
-    async.waterfall [
-        (cb) ->
-            fs.readFile "#{__dirname}/htmldoc.jade", 'utf-8', cb
-        (data, cb) ->
-            jade = require('jade')
-            template = jade.compile data
-            writeQueue.worker = 5
-            cb null, template
-    ], cb
 
 writeQueue = async.queue (locals, callback) ->
         out = join('build', 'htmldoc', locals.url)
@@ -265,7 +251,16 @@ writeQueue = async.queue (locals, callback) ->
                 locals.content = html
                 mkdirp dirname(out), cb
             (made, cb) ->
-                loadTemplate cb
+                if template?
+                    cb null, null
+                else
+                    fs.readFile "#{__dirname}/htmldoc.jade", 'utf-8', cb
+            (data, cb) ->
+                unless template?
+                    jade = require('jade')
+                    template = jade.compile data
+                    writeQueue.worker = 5
+                cb null, template
             (template, cb) ->
                 cb null, template locals.templateData()
             (page, cb) ->
