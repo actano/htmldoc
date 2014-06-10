@@ -44,7 +44,7 @@ class Directory
                     if docs?
                         for f in docs
                             new MarkdownPage @, join(@dir, f)
-                    pageCallback null, page for n, page of @files
+                    pageCallback null, (page for n, page of @files)
                     cb null
                     return
                     
@@ -74,10 +74,11 @@ class Directory
                     continue
                     
                 fileQueue.push
-                    dir: @
-                    name: f
+                        dir: @
+                        name: f
+                    , throwError
 
-            pageCallback null, page for n, page of @files
+            pageCallback null, (page for n, page of @files)
 
 # Order: Indexfiles, Title (locale), Filename
 
@@ -110,13 +111,11 @@ class AbstractPage
         path = @path()
         return ((p.treeChildren().sort comparePages) for p in path)
         
-    templateData: (navigation, cb) ->
+    templateData: (path, navigation, cb) ->
         dir = @parentDir.dir
         siblings = (p for name, p of @parentDir.files)
         siblings.sort comparePages
             
-        path = @path()
-        
         cb null, {
             page: @
             navigation
@@ -241,15 +240,10 @@ class LogPage extends AbstractPage
         ], cb
         
 writeQueue = async.queue (locals, callback) ->
-        out = join('build', 'htmldoc', locals.url)
+        locals.out = join('build', 'htmldoc', locals.url)
         
         async.waterfall [
             (cb) ->
-                locals.src cb
-            (html, cb) ->
-                locals.content = html
-                mkdirp dirname(out), cb
-            (made, cb) ->
                 if template?
                     cb null, null
                 else
@@ -258,14 +252,21 @@ writeQueue = async.queue (locals, callback) ->
                 unless template?
                     jade = require('jade')
                     template = jade.compile data
-                    writeQueue.concurrency = 5
-                cb null, template
-            (data, cb) ->
-                locals.templateData locals.navigation(), cb
+                    writeQueue.concurrency = 10
+                cb null            
+            (cb) ->
+                navigation = locals.navigation()
+                path = locals.path()
+                locals.templateData path, navigation, cb
             (templateData, cb) ->
-                cb null, template templateData
-            (page, cb) ->
-                fs.writeFile out, page, cb
+                locals.src (err, html) ->
+                    templateData.content = html
+                    cb err, templateData                    
+            (templateData, cb) ->
+                mkdirp dirname(locals.out), (err) ->
+                    cb err, templateData
+            (templateData, cb) ->
+                fs.writeFile locals.out, (template templateData), cb
         ], (err) ->
             throw err if err?
             callback()
