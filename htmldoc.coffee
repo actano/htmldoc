@@ -252,13 +252,6 @@ loadTemplate = (cb) ->
             writeQueue.worker = 5
     ], cb
 
-render = (page, cb) ->
-    async.waterfall [
-        loadTemplate
-        (template, cb) ->
-            cb null, template page.templateData()
-    ], cb
-
 writeQueue = async.queue (locals, callback) ->
         out = join('build', 'htmldoc', locals.url)
         
@@ -269,7 +262,9 @@ writeQueue = async.queue (locals, callback) ->
                 locals.content = html
                 mkdirp dirname(out), cb
             (made, cb) ->
-                render locals, cb
+                loadTemplate cb
+            (template, cb) ->
+                cb null, template locals.templateData()
             (page, cb) ->
                 fs.writeFile out, page, cb
         ], (err) ->
