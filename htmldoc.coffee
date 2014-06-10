@@ -108,7 +108,7 @@ class Entry
     toString: ->
         return @url
         
-    templateData: ->
+    templateData: (cb) ->
         dir = @parentDir.dir
         siblings = (p for name, p of @parentDir.files)
         siblings.sort comparePages
@@ -116,7 +116,7 @@ class Entry
         path = @path()
         navigation = ((p.treeChildren().sort comparePages) for p in path)
         
-        return {
+        cb null, {
             page: @
             navigation
             root: path[0]
@@ -262,7 +262,7 @@ writeQueue = async.queue (locals, callback) ->
                     writeQueue.worker = 5
                 cb null, template
             (data, cb) ->
-                cb null, locals.templateData()
+                locals.templateData cb
             (templateData, cb) ->
                 cb null, template templateData
             (page, cb) ->
