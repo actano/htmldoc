@@ -37,17 +37,14 @@ class Directory
     scanManifest: (files, pageCallback) ->
         for f in files
             if f.toLowerCase() == 'manifest.coffee'
-                @readManifest f, pageCallback
+                docs = require(join root, @dir, f).documentation
+                if docs?
+                    for f in docs
+                        new MarkdownPage @, join(@dir, f)
+                pageCallback null, page for n, page of @files
                 return true
         return false
     
-    readManifest: (f, pageCallback) ->
-        docs = require(join root, @dir, f).documentation
-        if docs?
-            for f in docs
-                new MarkdownPage @, join(@dir, f)
-        pageCallback null, page for n, page of @files
-
     readDir: (cb, pageCallback) ->
         fs.readdir @dir, (err, files) =>
             cb(err) if err?
