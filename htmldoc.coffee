@@ -25,8 +25,7 @@ class Directory
         new IndexPage @
 
         if @parentDir?
-            @parentDir.children[@name] = @
-#            new LogPage @
+            new LogPage @
     
     index: ->
         @files['index.html']
@@ -38,13 +37,14 @@ class Directory
         fs.readdir @dir, (err, files) =>
             cb err if err?
     
+            subdirs = []
             for f in files
                 if f.toLowerCase() == 'manifest.coffee'
                     docs = require(join root, @dir, f).documentation
                     if docs?
                         for f in docs
                             new MarkdownPage @, join(@dir, f)
-                    cb null, [], (page for n, page of @files)
+                    cb null, subdirs, (page for n, page of @files)
                     return
                     
             fileQueue = async.queue (data, cb) ->
@@ -53,12 +53,12 @@ class Directory
                     fs.stat file, (err, stats) ->
                         throw err if err?
                         if stats.isDirectory()
-                            new Directory dir, file
+                            subdirs.push new Directory dir, file
                         cb()
                 , 5
             
             fileQueue.drain = () =>
-                cb null, (child for n, child of @children), (page for n, page of @files)
+                cb null, subdirs, (page for n, page of @files)
     
             for f in files
                 if f.substring(0, 1) == '.'
@@ -153,11 +153,10 @@ class MarkdownPage extends AbstractPage
         file = basename url
         b = file.toLowerCase()
         if b.substr(-3) == '.md'
+            @title = file.substring(0, b.length - 3)
             if b == 'readme.md'
-                @title = basename dirname url
                 file = 'index.html'                
             else
-                @title = file.substring(0, b.length - 3)
                 file = "#{@title}.html"
             url = join dirname(url), file
 
@@ -254,8 +253,6 @@ writeQueue = async.queue (locals, callback) ->
             (cb) ->
                 path = locals.path()
                 navigation = (p.treeChildren() for p in path)
-                if locals.url == 'lib/index.html'
-                    console.log navigation
                 locals.templateData path, navigation, cb
             (templateData, cb) ->
                 locals.src (err, html) ->
