@@ -45,22 +45,22 @@ class Directory
     readDir: (cb) ->
         _dir = @
         fs.readdir @dir, (err, files) ->
-            throw err if err?
+            cb(err) if err?
     
             if _dir.scanManifest files
                 cb()
                 return
                 
-            checkFile = (f, cb) ->
-                file = join(_dir.dir, f)
-                fs.stat file, (err, stats) ->
-                    cb err if err?
-                    if stats.isDirectory()
-                        new Directory(_dir, file).readDir cb
-                        return
-                    cb()
-                
-            fileQueue = async.queue checkFile, 5
+            fileQueue = async.queue (f, cb) ->
+                    file = join(_dir.dir, f)
+                    fs.stat file, (err, stats) ->
+                        cb err if err?
+                        if stats.isDirectory()
+                            new Directory(_dir, file).readDir cb
+                            return
+                        cb()
+                , 5
+            
             fileQueue.drain = () ->
                 cb()
     
@@ -285,5 +285,6 @@ writeDirectory = (dir) ->
 
 rootDir = new Directory(undefined, '.')
 
-rootDir.readDir ->
+rootDir.readDir (err) ->
+    throw err if err? 
     writeDirectory rootDir
