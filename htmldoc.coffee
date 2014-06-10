@@ -33,26 +33,21 @@ class Directory
             
     toString: ->
         @dir
-
-    scanManifest: (files, pageCallback) ->
-        for f in files
-            if f.toLowerCase() == 'manifest.coffee'
-                docs = require(join root, @dir, f).documentation
-                if docs?
-                    for f in docs
-                        new MarkdownPage @, join(@dir, f)
-                pageCallback null, page for n, page of @files
-                return true
-        return false
     
     readDir: (cb, pageCallback) ->
         fs.readdir @dir, (err, files) =>
             cb(err) if err?
     
-            if @scanManifest files, pageCallback
-                cb()
-                return
-                
+            for f in files
+                if f.toLowerCase() == 'manifest.coffee'
+                    docs = require(join root, @dir, f).documentation
+                    if docs?
+                        for f in docs
+                            new MarkdownPage @, join(@dir, f)
+                    pageCallback null, page for n, page of @files
+                    cb null
+                    return
+                    
             fileQueue = async.queue (data, cb) ->
                     {dir, name} = data
                     file = join(dir.dir, name)
