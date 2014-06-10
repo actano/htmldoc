@@ -26,7 +26,7 @@ class Directory
 
         if @parentDir?
             @parentDir.children[@name] = @
-            new LogPage @
+#            new LogPage @
     
     index: ->
         @files['index.html']
@@ -80,8 +80,8 @@ class Directory
 # Order: Indexfiles, Title (locale), Filename
 
 comparePages = (a,b) ->
-    aindex = a.parentDir.index() == a
-    bindex = b.parentDir.index() == b
+    aindex = 'index.html' == basename a.url
+    bindex = 'index.html' == basename b.url
     return -1 if aindex && !bindex
     return 1 if bindex && !aindex
     if a.title? && b.title?
@@ -91,7 +91,7 @@ comparePages = (a,b) ->
         return -1 if !b.title?
         return 1 if !a.title?
         
-    return a.file.localeCompare b.file
+    return a.url.localeCompare b.url
 
 class AbstractPage
     constructor: (@parentDir, @url) ->
@@ -121,7 +121,9 @@ class AbstractPage
             title
             
             inpath: (p) ->
-                return path.indexOf(p) >= 0
+                for x in path
+                    return true if p.url == x.url
+                return false
                 
             relative: (url) ->
                 relative dir, url
@@ -136,9 +138,7 @@ class AbstractPage
         return @parentDir.parentDir.index()
             
     treeChildren: ->        
-        return [] unless @ == @parentDir.index()
-        
-        return (dir.index() for name, dir of @parentDir.children)
+        return @parentDir.treeChildren
         
     path: ->
         parent = @parent()
@@ -252,8 +252,10 @@ writeQueue = async.queue (locals, callback) ->
                     writeQueue.concurrency = 10
                 cb null            
             (cb) ->
-                navigation = locals.navigation()
                 path = locals.path()
+                navigation = (p.treeChildren() for p in path)
+                if locals.url == 'lib/index.html'
+                    console.log navigation
                 locals.templateData path, navigation, cb
             (templateData, cb) ->
                 locals.src (err, html) ->
@@ -272,6 +274,8 @@ writeQueue = async.queue (locals, callback) ->
 dirQueue = async.queue (dir, cb) ->
         dir.readDir (err, subdirs, pages) ->
             unless err?
+                dir.treeChildren = ({url: "#{d.dir}/index.html", title: d.name} for d in subdirs)
+                dir.treeChildren.sort comparePages
                 writeQueue.push pages, throwError
                 dirQueue.push subdirs, throwError
             cb err
