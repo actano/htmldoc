@@ -264,23 +264,24 @@ render = (page, cb) ->
 renderQueue = async.queue render, 1
 
 writeFile = (locals, callback) ->
+    out = join('build', 'htmldoc', locals.url)
+    
     async.waterfall [
         (cb) ->
             locals.src cb
         (html, cb) ->
             locals.content = html
-            mkdirp dirname(locals.out), cb
+            mkdirp dirname(out), cb
         (made, cb) ->
             render locals, cb
         (page, cb) ->
-            fs.writeFile locals.out, page, (err) -> cb err
+            fs.writeFile out, page, (err) -> cb err
     ], callback
 
 writeQueue = async.queue writeFile, 10
 
 writeDirectory = (dir) ->
     for file, locals of dir.files
-        locals.out = join('build', 'htmldoc', locals.url)
         writeQueue.push locals, (err) ->
             throw err if err?
     
