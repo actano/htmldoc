@@ -110,13 +110,12 @@ class AbstractPage
         path = @path()
         return ((p.treeChildren().sort comparePages) for p in path)
         
-    templateData: (cb) ->
+    templateData: (navigation, cb) ->
         dir = @parentDir.dir
         siblings = (p for name, p of @parentDir.files)
         siblings.sort comparePages
             
         path = @path()
-        navigation = @navigation()
         
         cb null, {
             page: @
@@ -128,8 +127,8 @@ class AbstractPage
             inpath: (p) ->
                 return path.indexOf(p) >= 0
                 
-            relative: (p) ->
-                relative dir, p.url
+            relative: (url) ->
+                relative dir, url
                 
             }
         
@@ -262,7 +261,7 @@ writeQueue = async.queue (locals, callback) ->
                     writeQueue.concurrency = 5
                 cb null, template
             (data, cb) ->
-                locals.templateData cb
+                locals.templateData locals.navigation(), cb
             (templateData, cb) ->
                 cb null, template templateData
             (page, cb) ->

@@ -4,7 +4,7 @@ mixin menu(level)
         ul
             each p in pages
                 li
-                    a(href=relative(p))= p.title
+                    a(href=relative(p.url))= p.title
                     if level < navigation.length && inpath(p)
                         +menu(level + 1)
 
@@ -16,7 +16,7 @@ html
     body        
         nav
             h1
-                a(href=relative(root))= title                    
+                a(href=relative(root.url))= title                    
             +menu(0)
         
         if siblings && siblings.length
@@ -24,7 +24,7 @@ html
                 ul
                     each p in siblings
                         li
-                            a(href=relative(p))= p.title
+                            a(href=relative(p.url))= p.title
 
         article
             != page.content
