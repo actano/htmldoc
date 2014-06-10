@@ -12,6 +12,11 @@ title = 'RPLAN - Developer Documentation'
 base = process.cwd()
 root = relative __dirname, base
 
+throwError = (err) ->
+    throw err if err?
+
+template = null
+
 class Directory
     constructor: (@parentDir, @dir) ->
         @name = basename @dir    
@@ -56,9 +61,7 @@ class Directory
                     fs.stat file, (err, stats) ->
                         throw err if err?
                         if stats.isDirectory()
-                            subdir = new Directory dir, file
-                            subdir.readDir cb
-                            return
+                            new Directory dir, file
                         cb()
                 , 5
             
@@ -242,8 +245,6 @@ class LogEntry extends Entry
                 cb null, markdown.toHTML stdout
         ], cb
         
-template = null
-
 writeQueue = async.queue (locals, callback) ->
         out = join('build', 'htmldoc', locals.url)
         
@@ -275,15 +276,15 @@ writeQueue = async.queue (locals, callback) ->
             callback()
     , 1
 
-throwError = (err) ->
-    throw err if err?
+dirQueue = async.queue (dir, cb) ->
+        async.waterfall [
+            (cb) ->
+                dir.readDir cb
+            (cb) ->
+                for name, child of dir.children
+                    dirQueue.push child, throwError
+                cb()
+        ], cb
+    , 10
     
-writeDirectory = (dir) ->    
-    for name, child of dir.children
-        writeDirectory child
-
-rootDir = new Directory(undefined, '.')
-
-rootDir.readDir (err) ->
-    throw err if err? 
-    writeDirectory rootDir
+dirQueue.push new Directory(undefined, '.'), throwError
