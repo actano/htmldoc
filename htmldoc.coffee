@@ -50,20 +50,19 @@ class Directory
             if _dir.scanManifest files
                 cb()
                 return
-    
-            countdown = 1
-            callback = ->
-                countdown--
-                if countdown == 0
-                    cb()
-    
-            stat = (file) ->
+                
+            checkFile = (f, cb) ->
+                file = join(_dir.dir, f)
                 fs.stat file, (err, stats) ->
-                    throw err if err?
+                    cb err if err?
                     if stats.isDirectory()
-                        new Directory(_dir, file).readDir callback
+                        new Directory(_dir, file).readDir cb
                         return
-                    callback()
+                    cb()
+                
+            fileQueue = async.queue checkFile, 5
+            fileQueue.drain = () ->
+                cb()
     
             for f in files
                 if f.substring(0, 1) == '.'
@@ -76,12 +75,8 @@ class Directory
                 if name.substr(-3) == ".md"
                     new FileEntry _dir, join(_dir.dir, f)
                     continue
-    
-                countdown++
-    
-                stat join(_dir.dir, f)
-    
-            callback()
+                    
+                fileQueue.push f
 
 # Order: Indexfiles, Title (locale), Filename
 
