@@ -43,20 +43,20 @@ class Directory
                 new FileEntry @, join(@dir, f)
 
     readDir: (cb) ->
-        _dir = @
-        fs.readdir @dir, (err, files) ->
+        fs.readdir @dir, (err, files) =>
             cb(err) if err?
     
-            if _dir.scanManifest files
+            if @scanManifest files
                 cb()
                 return
                 
-            fileQueue = async.queue (f, cb) ->
-                    file = join(_dir.dir, f)
+            fileQueue = async.queue (data, cb) ->
+                    {dir, name} = data
+                    file = join(dir.dir, name)
                     fs.stat file, (err, stats) ->
                         cb err if err?
                         if stats.isDirectory()
-                            new Directory(_dir, file).readDir cb
+                            new Directory(dir, file).readDir cb
                             return
                         cb()
                 , 5
@@ -73,10 +73,12 @@ class Directory
                     continue
     
                 if name.substr(-3) == ".md"
-                    new FileEntry _dir, join(_dir.dir, f)
+                    new FileEntry @, join(@dir, f)
                     continue
                     
-                fileQueue.push f
+                fileQueue.push
+                    dir: @
+                    name: f                    
 
 # Order: Indexfiles, Title (locale), Filename
 
