@@ -106,13 +106,17 @@ class AbstractPage
     toString: ->
         return @url
         
+    navigation: () ->
+        path = @path()
+        return ((p.treeChildren().sort comparePages) for p in path)
+        
     templateData: (cb) ->
         dir = @parentDir.dir
         siblings = (p for name, p of @parentDir.files)
         siblings.sort comparePages
             
         path = @path()
-        navigation = ((p.treeChildren().sort comparePages) for p in path)
+        navigation = @navigation()
         
         cb null, {
             page: @
