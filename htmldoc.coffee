@@ -22,11 +22,11 @@ class Directory
         @name = basename @dir    
         @files = {}
         @children = {}
-        new IndexEntry @
+        new IndexPage @
 
         if @parentDir?
             @parentDir.children[@name] = @
-            new LogEntry @
+            new LogPage @
     
     index: ->
         @files['index.html']
@@ -45,7 +45,7 @@ class Directory
         docs = require(join root, @dir, f).documentation
         if docs?
             for f in docs
-                new FileEntry @, join(@dir, f)
+                new MarkdownPage @, join(@dir, f)
 
     readDir: (cb) ->
         fs.readdir @dir, (err, files) =>
@@ -77,7 +77,7 @@ class Directory
                     continue
     
                 if name.substr(-3) == ".md"
-                    new FileEntry @, join(@dir, f)
+                    new MarkdownPage @, join(@dir, f)
                     continue
                     
                 fileQueue.push
@@ -103,7 +103,7 @@ comparePages = (a,b) ->
         
     return a.file.localeCompare b.file
 
-class Entry
+class AbstractPage
     constructor: (@parentDir, @url) ->
         @file = basename @url
         @parentDir.files[@file] = @
@@ -156,7 +156,7 @@ class Entry
         result.push @
         return result
 
-class FileEntry extends Entry
+class MarkdownPage extends AbstractPage
     constructor: (parentDir, @srcFile) ->
         url = @srcFile
         file = basename url
@@ -181,7 +181,7 @@ class FileEntry extends Entry
                 cb null, markdown.toHTML content
         ], cb
 
-class IndexEntry extends Entry
+class IndexPage extends AbstractPage
     constructor: (parentDir) ->
         super parentDir, join parentDir.dir, 'index.html'
         @title = basename parentDir.name
@@ -194,7 +194,7 @@ class IndexEntry extends Entry
         html = markdown.toHTML(items.join('\n'))
         cb null, html
     
-class LogEntry extends Entry
+class LogPage extends AbstractPage
     constructor: (parentDir) ->
         super parentDir, join parentDir.dir, 'commit.html'
         @title = 'Commits'
