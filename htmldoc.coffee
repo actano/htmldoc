@@ -34,9 +34,9 @@ class Directory
     toString: ->
         @dir
     
-    readDir: (cb, pageCallback) ->
+    readDir: (cb) ->
         fs.readdir @dir, (err, files) =>
-            cb(err) if err?
+            cb err if err?
     
             for f in files
                 if f.toLowerCase() == 'manifest.coffee'
@@ -44,8 +44,7 @@ class Directory
                     if docs?
                         for f in docs
                             new MarkdownPage @, join(@dir, f)
-                    pageCallback null, (page for n, page of @files)
-                    cb null
+                    cb null, [], (page for n, page of @files)
                     return
                     
             fileQueue = async.queue (data, cb) ->
@@ -58,8 +57,8 @@ class Directory
                         cb()
                 , 5
             
-            fileQueue.drain = () ->
-                cb()
+            fileQueue.drain = () =>
+                cb null, (child for n, child of @children), (page for n, page of @files)
     
             for f in files
                 if f.substring(0, 1) == '.'
@@ -77,8 +76,6 @@ class Directory
                         dir: @
                         name: f
                     , throwError
-
-            pageCallback null, (page for n, page of @files)
 
 # Order: Indexfiles, Title (locale), Filename
 
@@ -273,17 +270,11 @@ writeQueue = async.queue (locals, callback) ->
     , 1
 
 dirQueue = async.queue (dir, cb) ->
-        async.waterfall [
-            (cb) ->
-                dir.readDir cb, (err, pages) ->
-                    cb err if err?
-                    writeQueue.push pages, throwError
-                    
-            (cb) ->
-                for name, child of dir.children
-                    dirQueue.push child, throwError
-                cb()
-        ], cb
+        dir.readDir (err, subdirs, pages) ->
+            unless err?
+                writeQueue.push pages, throwError
+                dirQueue.push subdirs, throwError
+            cb err
     , 10
     
 dirQueue.push new Directory(undefined, '.'), throwError
