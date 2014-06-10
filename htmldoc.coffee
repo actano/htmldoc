@@ -54,9 +54,10 @@ class Directory
                     {dir, name} = data
                     file = join(dir.dir, name)
                     fs.stat file, (err, stats) ->
-                        cb err if err?
+                        throw err if err?
                         if stats.isDirectory()
-                            new Directory(dir, file).readDir cb
+                            subdir = new Directory dir, file
+                            subdir.readDir cb
                             return
                         cb()
                 , 5
@@ -78,7 +79,7 @@ class Directory
                     
                 fileQueue.push
                     dir: @
-                    name: f                    
+                    name: f
 
 # Order: Indexfiles, Title (locale), Filename
 
@@ -248,7 +249,7 @@ loadTemplate = (cb) ->
             loadTemplate = (cb) ->
                 cb null, template
             loadTemplate cb
-            renderQueue.worker = 5
+            writeQueue.worker = 5
     ], cb
 
 render = (page, cb) ->
@@ -258,7 +259,6 @@ render = (page, cb) ->
         (template, cb) ->
             cb null, template page.templateData()
     ], cb
-renderQueue = async.queue render, 1
 
 writeFile = (locals, callback) ->
     out = join('build', 'htmldoc', locals.url)
@@ -272,8 +272,10 @@ writeFile = (locals, callback) ->
         (made, cb) ->
             render locals, cb
         (page, cb) ->
-            fs.writeFile out, page, (err) -> cb err
-    ], callback
+            fs.writeFile out, page, cb
+    ], (err) ->
+        throw err if err?
+        callback()
 
 writeQueue = async.queue writeFile, 10
 
