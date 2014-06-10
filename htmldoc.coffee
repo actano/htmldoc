@@ -255,7 +255,7 @@ writeQueue = async.queue (locals, callback) ->
                 unless template?
                     jade = require('jade')
                     template = jade.compile data
-                    writeQueue.worker = 5
+                    writeQueue.concurrency = 5
                 cb null, template
             (data, cb) ->
                 locals.templateData cb
