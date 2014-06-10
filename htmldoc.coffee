@@ -81,6 +81,9 @@ class Directory
                     dir: @
                     name: f
 
+            for file, locals of @files
+                writeQueue.push locals, throwError
+
 # Order: Indexfiles, Title (locale), Filename
 
 comparePages = (a,b) ->
@@ -272,11 +275,10 @@ writeQueue = async.queue (locals, callback) ->
             callback()
     , 1
 
-writeDirectory = (dir) ->
-    for file, locals of dir.files
-        writeQueue.push locals, (err) ->
-            throw err if err?
+throwError = (err) ->
+    throw err if err?
     
+writeDirectory = (dir) ->    
     for name, child of dir.children
         writeDirectory child
 
