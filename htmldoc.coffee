@@ -120,9 +120,9 @@ class AbstractPage
             siblings
             title
             
-            inpath: (p) ->
+            inpath: (url) ->
                 for x in path
-                    return true if p.url == x.url
+                    return true if url == x.url
                 return false
                 
             relative: (url) ->

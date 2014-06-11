@@ -5,7 +5,7 @@ mixin menu(level)
             each p in pages
                 li
                     a(href=relative(p.url))= p.title
-                    if level < navigation.length && inpath(p)
+                    if level < navigation.length && inpath(p.url)
                         +menu(level + 1)
 
 doctype
