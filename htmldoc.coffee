@@ -180,6 +180,87 @@ class IndexPage extends AbstractPage
                 items.push "* [#{page.title}](#{url})"
         html = markdown.toHTML(items.join('\n'))
         cb null, html
+
+baseURL = null
+class Commit
+    constructor: (@hash) ->
+        @files = []
+        @fields =
+            hash: @hash
+
+    toString: ->
+        return """
+            # #{@fields.date} #{@fields.author} [#{@fields.subject}](#{baseURL}/commit/#{@hash})
+                #{@files.join '\n    '}
+        """
+        
+commitLog = (dir, cb) ->
+    commits = []
+    commit = null
+    
+    lineListener = (line) ->
+        if line[0] == '#'
+            i = line.indexOf ':'
+            header = [
+                line.substring(1, i).trim()
+                line.substring(i + 1).trim()
+            ]
+            throw line if header[0] == ''
+            key = header[0].toLowerCase()
+            if key == 'hash'
+                commits.push(commit = new Commit header[1])
+            else
+                commit.fields[key] = header[1]
+        else
+            commit.files.push line
+    
+    async.waterfall [
+        (cb) -> 
+            if baseURL?
+                cb null, baseURL
+                return
+
+            exec 'git config remote.origin.url', (err, stdout, stderr) ->
+                if err?
+                    cb err
+                    return
+                    
+                baseURL = stdout.toString()
+                    .replace /(.git)?\n+$/, ''
+                    .replace /^git@github.com:/, 'https://github.com/'
+                cb null, baseURL
+
+        (url, cb) ->
+            nextline = (line) ->
+                line = line.trim()
+                return if line == ''
+                lineListener line
+                
+            gitlog = spawn 'git', [
+                'log'
+                '--no-merges'
+                '--name-only'
+                '--date=iso'
+                "--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s"
+                '--'
+                dir
+            ]
+            buff = []
+            gitlog.stdout.on 'data', (data) ->
+                last = 0
+                for b, i in data
+                    if b == 10
+                        buff.push data.slice last, i
+                        last = i + 1
+                        line = Buffer.concat(buff.splice 0, buff.length).toString()
+                        nextline line
+                buff.push data.slice last, data.length
+                
+            gitlog.on 'close', (code) ->
+                cb new Error(code) unless code == 0
+                nextline Buffer.concat(buff).toString()
+                cb null, commits.join '\n'
+    ], cb
     
 class LogPage extends AbstractPage
     constructor: (parentDir) ->
@@ -187,51 +268,13 @@ class LogPage extends AbstractPage
         @title = 'Commits'
     
     src: (cb) ->
-        dir = @parentDir.dir
-        async.waterfall [
-            (cb) ->
-                exec 'git config remote.origin.url', cb
-            (stdout, stderr, cb) ->
-                url = stdout.toString()
-                    .replace /(.git)?\n+$/, ''
-                    .replace /^git@github.com:/, 'https://github.com/'
-                cb null, url
-            (url, cb) ->
-                lines = []
-                nextline = (line) ->
-                    return if line == ''
-                    line = "    #{line}" unless line[0] == '#'
-                    lines.push line
+        commitLog @parentDir.dir, (err, content) ->
+            if err?
+                cb err
+                return
+                
+            cb null, markdown.toHTML content
                     
-                gitlog = spawn 'git', [
-                    'log'
-                    '--no-merges'
-                    '--name-only'
-                    '--date=iso'
-                    "--pretty=# %cd %an [%s](#{url}/commit/%H)"
-                    '--'
-                    dir
-                ]
-                buff = []
-                gitlog.stdout.on 'data', (data) ->
-                    last = 0
-                    for b, i in data
-                        if b == 10
-                            buff.push data.slice last, i
-                            last = i + 1
-                            line = Buffer.concat(buff.splice 0, buff.length).toString()
-                            nextline line
-                    buff.push data.slice last, data.length
-                    
-                gitlog.on 'close', (code) ->
-                    cb new Error(code) unless code == 0
-                    nextline Buffer.concat(buff).toString()
-                    cb null, lines.join '\n'
-                                            
-            (stdout, cb) ->
-                cb null, markdown.toHTML stdout
-        ], cb
-        
 writeQueue = async.queue (locals, callback) ->
         locals.out = join('build', 'htmldoc', locals.url)
         
