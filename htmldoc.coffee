@@ -1,5 +1,6 @@
 #!/usr/bin/env coffee
 fs = require 'fs'
+semaphore = require 'semaphore'
 mkdirp = require 'mkdirp'
 {markdown} = require 'markdown'
 {basename, dirname, join, normalize, relative} = require 'path'
@@ -181,60 +182,71 @@ class IndexPage extends AbstractPage
         html = markdown.toHTML(items.join('\n'))
         cb null, html
 
-baseURL = null
 class Commit
-    constructor: (@hash) ->
+    constructor: (@baseURL, @hash) ->
         @files = []
         @fields =
             hash: @hash
 
+    matches: (dir) ->
+        dir += '/'
+        for f in @files
+            return true if f.substring(0, dir.length) == dir
+        return false
+
+    _fileString: (file) ->
+        return "* [`#{file}`](#{@baseURL}/blob/#{@hash}/#{file})"
+        
     toString: ->
         return """
-            # #{@fields.date} #{@fields.author} [#{@fields.subject}](#{baseURL}/commit/#{@hash})
-                #{@files.join '\n    '}
+            # #{@fields.date} #{@fields.author} [#{@fields.subject}](#{@baseURL}/commit/#{@hash})
+            #{(@_fileString file for file in @files).join '\n'}
         """
         
-commitLog = (dir, cb) ->
+logSem = semaphore(1)
+commits = null
+
+globalCommitLog = (cb) -> logSem.take ->
+    done = (err) ->        
+        logSem.leave()
+        return cb err if err?
+        cb null, commits
+            
+    return done() if commits?
+
+    baseURL = null
     commits = []
     commit = null
     
-    lineListener = (line) ->
-        if line[0] == '#'
-            i = line.indexOf ':'
-            header = [
-                line.substring(1, i).trim()
-                line.substring(i + 1).trim()
-            ]
-            throw line if header[0] == ''
-            key = header[0].toLowerCase()
-            if key == 'hash'
-                commits.push(commit = new Commit header[1])
-            else
-                commit.fields[key] = header[1]
-        else
-            commit.files.push line
-    
-    async.waterfall [
+    async.waterfall [        
         (cb) -> 
-            if baseURL?
-                cb null, baseURL
-                return
+            exec 'git config remote.origin.url', cb
 
-            exec 'git config remote.origin.url', (err, stdout, stderr) ->
-                if err?
-                    cb err
-                    return
-                    
-                baseURL = stdout.toString()
-                    .replace /(.git)?\n+$/, ''
-                    .replace /^git@github.com:/, 'https://github.com/'
-                cb null, baseURL
-
+        (stdout, stderr, cb) ->
+            baseURL = stdout.toString()
+                .replace /(.git)?\n+$/, ''
+                .replace /^git@github.com:/, 'https://github.com/'
+            cb null, baseURL
+            
         (url, cb) ->
             nextline = (line) ->
                 line = line.trim()
                 return if line == ''
-                lineListener line
+                
+                if line[0] == '#'
+                    i = line.indexOf ':'
+                    header = [
+                        line.substring(1, i).trim()
+                        line.substring(i + 1).trim()
+                    ]
+                    throw line if header[0] == ''
+                    key = header[0].toLowerCase()
+                    if key == 'hash'
+                        commits.push(commit = new Commit url, header[1])
+                    else
+                        commit.fields[key] = header[1]
+                else
+                    commit.files.push line
                 
             gitlog = spawn 'git', [
                 'log'
@@ -242,8 +254,6 @@ commitLog = (dir, cb) ->
                 '--name-only'
                 '--date=iso'
                 "--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s"
-                '--'
-                dir
             ]
             buff = []
             gitlog.stdout.on 'data', (data) ->
@@ -257,11 +267,20 @@ commitLog = (dir, cb) ->
                 buff.push data.slice last, data.length
                 
             gitlog.on 'close', (code) ->
-                cb new Error(code) unless code == 0
+                return cb new Error(code) unless code == 0
                 nextline Buffer.concat(buff).toString()
-                cb null, commits.join '\n'
-    ], cb
-    
+                cb()
+    ], done
+
+commitLog = (dir, cb) ->
+    globalCommitLog (err, commits) ->
+        return cb err if err?
+        
+        locals = []
+        for commit in commits
+            locals.push commit if commit.matches dir
+        cb null, locals.join '\n'
+
 class LogPage extends AbstractPage
     constructor: (parentDir) ->
         super parentDir, join parentDir.dir, 'commit.html'
