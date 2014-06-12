@@ -23,6 +23,7 @@ class Directory
         @name = basename @dir    
         @files = {}
         @children = {}
+        @scripts = []
         new IndexPage @
 
         if @parentDir?
@@ -44,7 +45,13 @@ class Directory
                     docs = require(join root, @dir, f).documentation
                     if docs?
                         for f in docs
-                            new MarkdownPage @, join(@dir, f)
+                            name = f.toLowerCase()
+                            if name.substr(-3) == ".md"
+                                new MarkdownPage @, join(@dir, f)
+                            else if name.substr(-3) == ".js"
+                                new JSFile @, join(@dir, f)
+                            else
+                                throw "Unsupported Documentation file: #{f}"
                     cb null, subdirs, (page for n, page of @files)
                     return
                     
@@ -111,25 +118,35 @@ class AbstractPage
         
     templateData: (path, navigation, cb) ->
         dir = @parentDir.dir
-        siblings = (p for name, p of @parentDir.files)
+        siblings = []
+        for name, p of @parentDir.files
+            siblings.push p if p.title?
         siblings.sort comparePages
-            
-        cb null, {
+        
+        data = {
             page: @
             navigation
             root: path[0]
             siblings
             title
-            
+
             inpath: (url) ->
                 for x in path
                     return true if url == x.url
                 return false
-                
+
             relative: (url) ->
                 relative dir, url
+        }
+        
+        jobs = []
+        for s in @parentDir.scripts
+            jobs.push (cb) ->
+                s.src cb
                 
-            }
+        async.parallel jobs, () ->
+            data.scripts = arguments[1]
+            cb null, data
         
     parent: ->        
         unless @file == 'index.html'
@@ -145,6 +162,13 @@ class AbstractPage
         result.push @
         return result
 
+class JSFile
+    constructor: (parentDir, @srcFile) ->
+        parentDir.scripts.push @
+        
+    src: (cb) ->
+        fs.readFile @srcFile, 'utf-8', cb
+        
 class MarkdownPage extends AbstractPage
     constructor: (parentDir, @srcFile) ->
         url = @srcFile
