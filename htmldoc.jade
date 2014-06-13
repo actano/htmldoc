@@ -1,3 +1,5 @@
+include ../../lib/icon/views/icon
+
 mixin menu(level)
     - var pages = navigation[level]
     if pages && pages.length
@@ -17,7 +19,10 @@ html
     body        
         nav
             h1
-                a(href=relative(root.url))= title                    
+                a(href=relative(root.url))= title
+                a(href=relative('htmldoc.tgz')).downloadlink
+                    +faicon('fa-download')
+
             +menu(0)
         
         if siblings && siblings.length
