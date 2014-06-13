@@ -2,7 +2,7 @@
 fs = require 'fs'
 semaphore = require 'semaphore'
 mkdirp = require 'mkdirp'
-{markdown} = require 'markdown'
+marked = require 'marked'
 {basename, dirname, join, normalize, relative} = require 'path'
 {exec, spawn} = require 'child_process'
 async = require 'async'
@@ -190,7 +190,7 @@ class MarkdownPage extends AbstractPage
             (cb) =>
                 fs.readFile srcFile, 'utf-8', cb
             (content, cb) ->
-                cb null, markdown.toHTML content
+                cb null, marked(content)
         ], cb
 
 class IndexPage extends AbstractPage
@@ -203,7 +203,7 @@ class IndexPage extends AbstractPage
         for url, page of @parentDir.files
             if page.title?
                 items.push "* [#{page.title}](#{url})"
-        html = markdown.toHTML(items.join('\n'))
+        html = marked(items.join('\n'))
         cb null, html
 
 class Commit
@@ -316,7 +316,7 @@ class LogPage extends AbstractPage
                 cb err
                 return
                 
-            cb null, markdown.toHTML content
+            cb null, marked content
                     
 writeQueue = async.queue (locals, callback) ->
         locals.out = join('build', 'htmldoc', locals.url)
