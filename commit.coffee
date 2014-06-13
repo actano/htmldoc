@@ -1,6 +1,7 @@
 semaphore = require 'semaphore'
 async = require 'async'
 {exec, spawn} = require 'child_process'
+fs = require 'fs'
 
 module.exports = class Commit
     constructor: (@baseURL, @hash) ->
@@ -37,10 +38,18 @@ globalCommitLog = (cb) -> logSem.take ->
     baseURL = null
     commits = []
     commit = null
+    gitdir = null
 
     async.waterfall [
         (cb) ->
-            exec 'git config remote.origin.url', cb
+            fs.readFile '.rsync-src', 'utf-8', (err, src) ->
+                gitdir = "#{src.trim()}.git" unless err?
+                cb null
+
+        (cb) ->
+            cmd = 'git'
+            cmd = "#{cmd} --git-dir #{gitdir}" if gitdir?
+            exec "#{cmd} config remote.origin.url", cb
 
         (stdout, stderr, cb) ->
             baseURL = stdout.toString()
@@ -68,13 +77,17 @@ globalCommitLog = (cb) -> logSem.take ->
                 else
                     commit.files.push line
 
-            gitlog = spawn 'git', [
+            params = [
+                '--git-dir' if gitdir?
+                gitdir if gitdir?
                 'log'
                 '--no-merges'
                 '--name-only'
                 '--date=iso'
-                "--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s"
+                '--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s'
             ]
+
+            gitlog = spawn 'git', params
             buff = []
             gitlog.stdout.on 'data', (data) ->
                 last = 0
