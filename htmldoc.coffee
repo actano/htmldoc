@@ -330,7 +330,8 @@ writeQueue = async.queue (locals, callback) ->
             (data, cb) ->
                 unless template?
                     jade = require('jade')
-                    template = jade.compile data
+                    template = jade.compile data,
+                        filename: "#{__dirname}/htmldoc.jade"
                     writeQueue.concurrency = 10
                 cb null            
             (cb) ->
