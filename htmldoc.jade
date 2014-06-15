@@ -16,24 +16,26 @@ html
         meta(charset='utf-8')
         title=page.title + " | " + title
         link(rel="stylesheet", type="text/css", href=relative('htmldoc.css'), charset='utf-8')
-    body        
+
+    body.htmldoc
         nav
-            h1
+            h2
                 a(href=relative(root.url))= title
                 a(href=relative('htmldoc.tgz')).downloadlink
                     +faicon('fa-download')
 
             +menu(0)
         
-        if siblings && siblings.length
-            nav.pages
-                ul
-                    each p in siblings
-                        li
-                            a(href=relative(p.url))= p.title
+        section.content
+            if siblings && siblings.length
+                nav.pages
+                    ul
+                        each p in siblings
+                            li
+                                a(href=relative(p.url))= p.title
 
-        article
-            != content
+            article
+                != content
 
     script(type="text/javascript", src=relative('htmldoc.js'), charset='utf-8')
     if scripts
