@@ -1,4 +1,0 @@
----
-layout: master
-contenttype: commitlog
----
