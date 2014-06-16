@@ -1,14 +1,19 @@
 include ../../lib/icon/views/icon
 
-mixin menu(level)
-    - var pages = navigation[level]
+mixin ulli(pages)
     if pages && pages.length
         ul
             each p in pages
-                li
+                li(class=[page.url == p.url ? 'current' : inpath(p.url) ? 'path' : ''])
                     a(href=relative(p.url))= p.title
-                    if level < navigation.length && inpath(p.url)
-                        +menu(level + 1)
+                    if inpath(p.url)
+                        block
+
+mixin menu(level)
+    - var pages = navigation[level]
+    +ulli(pages)
+        if level < navigation.length
+            +menu(level + 1)
 
 doctype
 html
@@ -29,10 +34,7 @@ html
         section.content
             if siblings && siblings.length
                 nav.pages
-                    ul
-                        each p in siblings
-                            li
-                                a(href=relative(p.url))= p.title
+                    +ulli(siblings)
 
             article
                 != content
