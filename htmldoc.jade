@@ -4,7 +4,7 @@ mixin ulli(pages)
     if pages && pages.length
         ul
             each p in pages
-                li(class=[page.url == p.url ? 'current' : inpath(p.url) ? 'path' : ''])
+                li(class=[page.url == p.url ? 'active' : inpath(p.url) ? 'inpathof-active' : ''])
                     a(href=relative(p.url))= p.title
                     if inpath(p.url)
                         block
