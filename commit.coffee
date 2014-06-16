@@ -78,14 +78,17 @@ globalCommitLog = (cb) -> logSem.take ->
                     commit.files.push line
 
             params = [
-                '--git-dir' if gitdir?
-                gitdir if gitdir?
                 'log'
                 '--no-merges'
                 '--name-only'
                 '--date=iso'
                 '--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s'
             ]
+            if gitdir?
+                params = [
+                    '--git-dir'
+                    gitdir
+                ].concat params
 
             gitlog = spawn 'git', params
             buff = []
