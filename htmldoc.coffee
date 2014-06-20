@@ -25,7 +25,7 @@ writeQueue = async.queue (locals, callback) ->
                     template = jade.compile data,
                         filename: "#{__dirname}/htmldoc.jade"
                     writeQueue.concurrency = 10
-                cb null            
+                cb null
             (cb) ->
                 path = locals.path()
                 navigation = (p.parentDir.treeChildren for p in path)
@@ -40,7 +40,7 @@ writeQueue = async.queue (locals, callback) ->
             (templateData, cb) ->
                 fs.writeFile locals.out, (template templateData), cb
         ], (err) ->
-            throw err if err?
+            throw "#{err} in #{locals.url}" if err?
             callback()
     , 1
 
