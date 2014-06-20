@@ -21,7 +21,7 @@ module.exports = class Commit
     toString: ->
         return """
             # #{@fields.date} #{@fields.author} [#{@fields.subject}](#{@baseURL}/commit/#{@hash})
-            #{(@_fileString file for file in @files).join '\n'}
+            {(@_fileString file for file in @files).join '\n'}
         """
 
 logSem = semaphore(1)
@@ -115,5 +115,5 @@ module.exports.commitLog = (dir, cb) ->
         locals = []
         for commit in commits
             locals.push commit if commit.matches dir
-        cb null, locals.join '\n'
+        cb null, locals.join '\n\n'
 
