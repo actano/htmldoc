@@ -21,7 +21,7 @@ module.exports = class Commit
     toString: ->
         return """
             # #{@fields.date} #{@fields.author} [#{@fields.subject}](#{@baseURL}/commit/#{@hash})
-            {(@_fileString file for file in @files).join '\n'}
+            #{(@_fileString file for file in @files).join '\n'}
         """
 
 logSem = semaphore(1)
