@@ -1,7 +1,7 @@
 {basename, dirname, join, normalize, relative} = require 'path'
 async = require 'async'
 
-title = 'RPLAN - Developer Documentation'
+title = 'Internal Documentation'
 
 # Order: Indexfiles, Title (locale), Filename
 
