@@ -4,6 +4,7 @@ async = require 'async'
 
 IndexPage = require './indexpage'
 LogPage = require './logpage'
+ApiDocPage = require './apidocpage'
 MarkdownPage = require './markdownpage'
 JSFile = require './jsfile'
 
@@ -36,9 +37,10 @@ module.exports = class Directory
             subdirs = []
             for f in files
                 if f.toLowerCase() == 'manifest.coffee'
-                    docs = require(join root, @dir, f).documentation
-                    if docs?
-                        for f in docs
+                    manifest = require(join root, @dir, f)
+                    new ApiDocPage @, manifest
+                    if manifest.documentation?
+                        for f in manifest.documentation
                             name = f.toLowerCase()
                             if name.substr(-3) == ".md"
                                 new MarkdownPage @, join(@dir, f)
