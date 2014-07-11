@@ -74,7 +74,7 @@ module.exports = class ApiDocPage extends AbstractPage
         return list
 
     createPart: (key, html) ->
-        "<div id=#{key}>#{@correctClassLinks html}</div>"
+        "<div class='apidoc' id=#{key}>#{@correctClassLinks html}</div>"
 
     # TODO Works only for internal classes of a feature. How to deal with external class links?
     correctClassLinks: (html) ->
