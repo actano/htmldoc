@@ -17,8 +17,6 @@ $(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component
 	@mkdir -p "$(HTMLDOC)"
 	tar -c --exclude component-is-build --directory "$(<D)" . | tar -x --directory "$(HTMLDOC)"
 	$(TOOLS)/htmldoc/node_modules/.bin/coffee $(TOOLS)/htmldoc/htmldoc.coffee
-	mkdir -p $(HTMLDOC)/apidoc
-	apidoc -i $(ROOT)/lib/ -o $(HTMLDOC)/apidoc/ 1> /dev/null
 	@touch $(HTMLDOC)/index.html
 
 .SECONDARY: $(HTMLDOC)/%
