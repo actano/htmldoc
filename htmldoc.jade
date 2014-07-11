@@ -1,12 +1,9 @@
 mixin faicon(icon)
     i(class=['fa', icon])
 
-mixin ulli(pages, showApidoc)
+mixin ulli(pages)
     if pages && pages.length
         ul
-            if showApidoc
-                li
-                    a(href=relative('apidoc/')) REST Dokumentation
             each p in pages
                 li(class=[page.url == p.url ? 'active' : inpath(p.url) ? 'inpathof-active' : ''])
                     a(href=relative(p.url))= p.title
@@ -15,7 +12,7 @@ mixin ulli(pages, showApidoc)
 
 mixin menu(level)
     - var pages = navigation[level]
-    +ulli(pages, level == 0)
+    +ulli(pages)
         if level < navigation.length
             +menu(level + 1)
 
