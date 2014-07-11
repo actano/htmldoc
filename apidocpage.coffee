@@ -74,7 +74,15 @@ module.exports = class ApiDocPage extends AbstractPage
         return list
 
     createPart: (key, html) ->
-        "<div id=#{key}>#{html}</div>"
+        "<div id=#{key}>#{@correctClassLinks html}</div>"
+
+    # TODO Works only for internal classes of a feature. How to deal with external class links?
+    correctClassLinks: (html) ->
+        for className in @getClassKeys()
+            # replace the original class link by an id reference
+            regex = new RegExp "href=\'[\.\.\/]*class\/#{className}\.html\'", 'g'
+            html = html.replace regex, "href='##{className}'"
+        return html
 
     getClassKeys: ->
         key for key in Object.keys @docParts when key.indexOf('/') is -1
