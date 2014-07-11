@@ -60,12 +60,18 @@ module.exports = class ApiDocPage extends AbstractPage
 
     assembleHtml: ->
         return if @docParts is {}
-        output = @createLinkList 'Class List', @getClassKeys()
-        output += @createLinkList 'File List', @getFileKeys()
+        output = @createNavigation()
         for key, html of @docParts
             output += @createSeparator()
             output += @createPart key, html
         return output
+
+    createNavigation: ->
+        nav = "<div id='navigation'>"
+        nav += @createLinkList 'Class List', @getClassKeys()
+        nav += @createLinkList 'File List', @getFileKeys()
+        nav += '</div>'
+        return nav
 
     createLinkList: (title, keys) ->
         list = "<h1>#{title}</h1><ul>"
@@ -74,7 +80,7 @@ module.exports = class ApiDocPage extends AbstractPage
         return list
 
     createPart: (key, html) ->
-        "<div class='apidoc' id=#{key}>#{@correctClassLinks html}</div>"
+        "<div class='apidoc' id=#{key}><a href='#navigation'>top</a>#{@correctClassLinks html}</div>"
 
     # TODO Works only for internal classes of a feature. How to deal with external class links?
     correctClassLinks: (html) ->
