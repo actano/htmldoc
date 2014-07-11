@@ -32,13 +32,19 @@ writeQueue = async.queue (locals, callback) ->
                 locals.templateData path, navigation, cb
             (templateData, cb) ->
                 locals.src (err, html) ->
-                    templateData.content = html
-                    cb err, templateData                    
+                    if html?
+                        templateData.content = html
+                    else
+                        templateData = null
+                    cb err, templateData
             (templateData, cb) ->
                 mkdirp dirname(locals.out), (err) ->
                     cb err, templateData
             (templateData, cb) ->
-                fs.writeFile locals.out, (template templateData), cb
+                if templateData?
+                    fs.writeFile locals.out, (template templateData), cb
+                else
+                    cb()
         ], (err) ->
             throw "#{err} in #{locals.url}" if err?
             callback()
