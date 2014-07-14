@@ -52,6 +52,7 @@ dirQueue = async.queue (dir, cb) ->
                 writeQueue.push pages, throwError
                 dirQueue.push subdirs, throwError
             cb err
-    , 10
+    , 100 # TODO: this is a crazy bug, occurs only for fast cpu
+    # problem is that consumer is faster than producer -> queue ends too early
     
 dirQueue.push new Directory(undefined, '.'), throwError
