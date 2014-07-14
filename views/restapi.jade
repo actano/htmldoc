@@ -76,7 +76,7 @@ mixin restRouteList(routes)
     if routes && routes.length
         ul
             each route in routes
-                - if (route.type == 'get') {
+                - if (route.type != '') {
                     +restRouteDocumentation(route)
                 - }
 
