@@ -1,5 +1,13 @@
+// mixin for a single route documentation entry
+mixin restRouteDocumentation(route)
+    li
+        h2='(' + route.type + ') ' + route.title
+
+// the actual document
 h2 Documentation Entries
 ul
     - for (var i = 0; i < data.length; ++i) {
-      li=data[i].name
+        - if (data[i].type == 'get') {
+            +restRouteDocumentation(data[i])
+        - }
     - }
