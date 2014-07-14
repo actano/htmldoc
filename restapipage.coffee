@@ -1,17 +1,23 @@
 {basename, dirname, join, normalize, relative} = require 'path'
 AbstractPage = require './abstractpage'
+Apidoc = require 'apidoc/lib/apidoc'
+
 
 ###
-    Dummy Page class used to insert a link to the actual rest api documentation
-    page.
+    Uses apidoc to generate documentation page.
 ###
 module.exports = class RestApiPage extends AbstractPage
     constructor: (@parentDir) ->
-        super parentDir, join(parentDir.dir, 'rest', 'restapi.html')
+        super parentDir, join(parentDir.dir, 'restapi.html')
         @title = 'Rest API Documentation'
 
     src: (cb) ->
-        cb null, null
+        data = Apidoc.getParsedData(@parentDir.dir)
+
+        if data?
+            cb null, JSON.stringify data
+        else
+            cb null
 
     parent: ->
          return @parentDir.index()
