@@ -1,4 +1,4 @@
-define({ api: [
+[
   {
     "type": "get",
     "url": "/api/planning-objects/",
@@ -166,4 +166,4 @@ define({ api: [
     "version": "0.0.0",
     "filename": "/opt/actano-rplan/lib/planning-objects/server.coffee"
   }
-] });
+]
