@@ -1,13 +1,88 @@
-// mixin for a single route documentation entry
+//
+// mixin that displays all information about a response
+//
+// @param name The name of the response (e.g. 'Success 200')
+// @param responseFields A list of all value-fields of the response
+//
+mixin responseBox(name, responseFields)
+    h4=name
+    for field in responseFields
+        - title = field.field + ' (' + field.type + ')'
+        - if (field.optional) { title = '[' + title + ']'; }
+        div
+            p=title
+            p(style='padding-left: 2em;')=field.description
+
+//
+// mixin for a list of success responses
+//
+// @param title The title for the list
+// @param responses A list of all responses
+//
+mixin responseList(title, responses)
+    h3=title
+    each responseFields, name in responses
+        +responseBox(name, responseFields)
+
+
+//
+// mixin that displays all information about response example
+//
+// @param example The response example
+//
+mixin responseExample(example)
+    div
+        h4=example.title
+        code=example.content
+
+//
+// mixin for a list of example responses
+//
+// @param title The title for the list
+// @param responses A list of all examples
+//
+mixin responseExamplesList(title, examples)
+    h3=title
+    each example in examples
+        +responseExample(example)
+
+//
+// mixin for a rest route
+//
+// @param route The rest route
+//
 mixin restRouteDocumentation(route)
     li
         h2='(' + route.type + ') ' + route.title
+        div
+            h3 Url
+            =route.url
 
+            if route.success
+                if route.success.fields
+                    +responseList('Success Responses', route.success.fields)
+                if route.success.examples
+                    +responseExamplesList('Success Response Examples', route.success.examples)
+
+            if route.error && route.error.fields
+                +responseList('Error Responses', route.error.fields)
+
+//
+// mixin for the list of rest routes
+//
+// @param routes The list of rest routes
+//
+mixin restRouteList(routes)
+    if routes && routes.length
+        ul
+            each route in routes
+                - if (route.type == 'get') {
+                    +restRouteDocumentation(route)
+                - }
+
+
+//
 // the actual document
+//
 h2 Documentation Entries
-ul
-    - for (var i = 0; i < data.length; ++i) {
-        - if (data[i].type == 'get') {
-            +restRouteDocumentation(data[i])
-        - }
-    - }
++restRouteList(data)
