@@ -1,28 +1,28 @@
 //
-// mixin that displays all information about a response
+// mixin that displays all information about a field
 //
-// @param name The name of the response (e.g. 'Success 200')
-// @param responseFields A list of all value-fields of the response
+// @param name The name of the field
+// @param properties A list of all properties of the field
 //
-mixin responseBox(name, responseFields)
+mixin fieldBox(name, properties)
     h4=name
-    for field in responseFields
-        - title = field.field + ' (' + field.type + ')'
-        - if (field.optional) { title = '[' + title + ']'; }
+    for property in properties
+        - title = property.field + ' (' + property.type + ')'
+        - if (property.optional) { title = '[' + title + ']'; }
         div
             p=title
-            p(style='padding-left: 2em;')=field.description
+            p(style='padding-left: 2em;')=property.description
 
 //
-// mixin for a list of success responses
+// mixin for a list of fields
 //
 // @param title The title for the list
-// @param responses A list of all responses
+// @param fields A list of all fields
 //
-mixin responseList(title, responses)
+mixin fieldList(title, fields)
     h3=title
-    each responseFields, name in responses
-        +responseBox(name, responseFields)
+    each properties, name in fields
+        +fieldBox(name, properties)
 
 
 //
@@ -58,14 +58,23 @@ mixin restRouteDocumentation(route)
             h3 Url
             =route.url
 
+            if route.parameter
+                if route.parameter.fields
+                    +fieldList('Parameters', route.parameter.fields)
+
             if route.success
                 if route.success.fields
-                    +responseList('Success Responses', route.success.fields)
+                    +fieldList('Success Responses', route.success.fields)
+
                 if route.success.examples
                     +responseExamplesList('Success Response Examples', route.success.examples)
 
-            if route.error && route.error.fields
-                +responseList('Error Responses', route.error.fields)
+            if route.error
+                if route.error.fields
+                    +fieldList('Error Responses', route.error.fields)
+
+                if route.error.examples
+                    +responseExamplesList('Error Response Examples', route.error.examples)
 
 //
 // mixin for the list of rest routes
