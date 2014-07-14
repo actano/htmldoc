@@ -69,7 +69,7 @@ module.exports = class ApiDocPage extends AbstractPage
     createNavigation: ->
         nav = "<div id='navigation'>"
         nav += @createLinkList 'Class List', @getClassKeys()
-        nav += @createLinkList 'File List', @getFileKeys()
+        nav += @createLinkList 'Module List', @getFileKeys()
         nav += '</div>'
         return nav
 
