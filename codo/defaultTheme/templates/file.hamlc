@@ -1,0 +1,54 @@
+#content
+  %h1
+    File:
+    = @entity.basename
+
+  - entityFilter = (e) -> e.documentation.usedByExports
+  - exportsFilter = (e) -> e.documentation.exports
+
+  - entityVariables = @entity.variables.filter entityFilter
+  - entityMethods = @entity.effectiveMethods().filter entityFilter
+
+  - exportsVariables = @entity.variables.filter exportsFilter
+  - exportsMethods = @entity.effectiveMethods().filter exportsFilter
+
+  %table.box
+    %tr
+      %td Defined in:
+      %td= @entity.dirname
+    - if @entity.classes.length > 0
+      %tr
+        %td
+          Classes:
+        %td
+          - for klass in @entity.classes
+            %a{href: @pathFor('class', klass, @path)}
+              = klass.name
+    - if @entity.mixins.length > 0
+      %tr
+        %td
+          Mixins:
+        %td
+          - for mixin in @entity.mixins
+            %a{href: @pathFor('mixin', mixin, @path)}
+              = mixin.name
+
+  - if not @environment.options.exports
+    %h1 Locals
+
+    - if entityVariables.length > 0
+      %h2 Variables Summary
+      != @render 'partials/variable_list', variables: entityVariables
+
+      %h2 Method Details
+      != @render 'partials/method_list', methods: entityMethods
+
+
+  %h1 module.exports
+
+  - if exportsVariables.length > 0
+    %h2 Exported object
+    != @render 'partials/variable_list', variables: exportsVariables
+
+    %h2 Exported function
+    != @render 'partials/method_list', methods: exportsMethods

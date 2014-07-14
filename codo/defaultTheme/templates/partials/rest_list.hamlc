@@ -1,0 +1,7 @@
+- if @entity.rest? && @entity.rest.length > 0
+  - for route in @entity.rest
+    %p{ id: "#{route.name}-route" }
+      = route.name
+    - if @entity.documentation
+      %h3 Parameters:
+      %p fooooooo!

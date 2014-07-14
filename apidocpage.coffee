@@ -1,6 +1,6 @@
 {basename, dirname, join, normalize, relative} = require 'path'
 Codo = require 'codo'
-Theme = require 'codo/themes/default/lib/theme'
+Theme = require './codo/defaultTheme/lib/theme'
 
 AbstractPage = require './abstractpage'
 
