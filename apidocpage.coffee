@@ -37,8 +37,6 @@ module.exports = class ApiDocPage extends AbstractPage
 
         # don't consider underscore functions
         environment.options['implicit-private'] = true
-        # don't consider local variables and functions
-        environment.options['exports'] = true
 
         for script in @getScriptFiles()
             environment.readCoffee "#{@parentDir.dir}/#{script}"
