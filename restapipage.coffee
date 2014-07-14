@@ -1,9 +1,8 @@
 {basename, dirname, join, normalize, relative} = require 'path'
+jade = require 'jade'
+
 AbstractPage = require './abstractpage'
 Apidoc = require 'apidoc/lib/apidoc'
-
-jade = require 'jade'
-#template = require './restapi.jade'
 
 ###
     Uses apidoc to generate documentation page.
