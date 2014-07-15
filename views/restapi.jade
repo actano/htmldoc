@@ -61,7 +61,19 @@ mixin responseExamplesList(title, examples)
 //
 mixin restRouteDocumentation(route)
     li
-        h2='(' + route.type + ') ' + route.title
+        h2
+            if (route.type == 'post')
+                div.routetype.post=route.type
+            else if (route.type == 'get')
+                div.routetype.get=route.type
+            else if (route.type == 'put')
+                div.routetype.put=route.type
+            else if (route.type == 'delete')
+                div.routetype.delete=route.type
+            else
+                div.routetype=route.type
+
+            div.routetitle=route.title
         div
             h3 Url
             =route.url
