@@ -1,9 +1,9 @@
-//
-// mixin that displays all information about a field
-//
-// @param name The name of the field
-// @param properties A list of all properties of the field
-//
+//-
+//- mixin that displays all information about a field
+//-
+//- @param name The name of the field
+//- @param properties A list of all properties of the field
+//-
 mixin fieldBox(name, properties)
     h4=name
 
@@ -21,44 +21,44 @@ mixin fieldBox(name, properties)
                         td=property.type
                         td=property.description
 
-//
-// mixin for a list of fields
-//
-// @param title The title for the list
-// @param fields A list of all fields
-//
+//-
+//- mixin for a list of fields
+//-
+//- @param title The title for the list
+//- @param fields A list of all fields
+//-
 mixin fieldList(title, fields)
     h3=title
     each properties, name in fields
         +fieldBox(name, properties)
 
 
-//
-// mixin that displays all information about response example
-//
-// @param example The response example
-//
+//-
+//- mixin that displays all information about response example
+//-
+//- @param example The response example
+//-
 mixin responseExample(example)
     h4=example.title
     div.example
         code=example.content
 
-//
-// mixin for a list of example responses
-//
-// @param title The title for the list
-// @param responses A list of all examples
-//
+//-
+//- mixin for a list of example responses
+//-
+//- @param title The title for the list
+//- @param responses A list of all examples
+//-
 mixin responseExamplesList(title, examples)
     h3=title
     each example in examples
         +responseExample(example)
 
-//
-// mixin for a rest route
-//
-// @param route The rest route
-//
+//-
+//- mixin for a rest route
+//-
+//- @param route The rest route
+//-
 mixin restRouteDocumentation(route)
     li
         h2
@@ -96,11 +96,11 @@ mixin restRouteDocumentation(route)
                 if route.error.examples
                     +responseExamplesList('Error Response Examples', route.error.examples)
 
-//
-// mixin for the list of rest routes
-//
-// @param routes The list of rest routes
-//
+//-
+//- mixin for the list of rest routes
+//-
+//- @param routes The list of rest routes
+//-
 mixin restRouteList(routes)
     if routes && routes.length
         ul
@@ -110,8 +110,8 @@ mixin restRouteList(routes)
                 - }
 
 
-//
-// the actual document
-//
+//-
+//- the actual document
+//-
 div.restapi
     +restRouteList(data)
