@@ -33,22 +33,24 @@
             %a{href: @pathFor('mixin', mixin, @path)}
               = mixin.name
 
-  - if not @environment.options.exports
+  - if entityVariables.length > 0 or entityMethods.length > 0
     %h1 Locals
 
     - if entityVariables.length > 0
       %h2 Variables Summary
       != @render 'partials/variable_list', variables: entityVariables
 
+    - if entityMethods.length > 0
       %h2 Method Details
       != @render 'partials/method_list', methods: entityMethods
 
+  - if exportsVariables.length > 0 or exportsMethods.length > 0
+    %h1 module.exports
 
-  %h1 module.exports
+    - if exportsVariables.length > 0
+      %h2 Exported object
+      != @render 'partials/variable_list', variables: exportsVariables
 
-  - if exportsVariables.length > 0
-    %h2 Exported object
-    != @render 'partials/variable_list', variables: exportsVariables
-
-    %h2 Exported function
-    != @render 'partials/method_list', methods: exportsMethods
+    - if exportsMethods.length > 0
+      %h2 Exported functions
+      != @render 'partials/method_list', methods: exportsMethods
