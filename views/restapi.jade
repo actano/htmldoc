@@ -6,12 +6,20 @@
 //
 mixin fieldBox(name, properties)
     h4=name
-    for property in properties
-        - title = property.field + ' (' + property.type + ')'
-        - if (property.optional) { title = '[' + title + ']'; }
-        div.property
-            div.title=title
-            div.description=property.description
+
+    div
+        table.fieldbox
+            thead
+                tr
+                    td Field
+                    td Type
+                    td Description
+            tbody
+                for property in properties
+                    tr
+                        td=property.field
+                        td=property.type
+                        td=property.description
 
 //
 // mixin for a list of fields
