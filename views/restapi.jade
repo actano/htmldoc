@@ -9,9 +9,9 @@ mixin fieldBox(name, properties)
     for property in properties
         - title = property.field + ' (' + property.type + ')'
         - if (property.optional) { title = '[' + title + ']'; }
-        div
-            p=title
-            p(style='padding-left: 2em;')=property.description
+        div.property
+            div.title=title
+            div.description=property.description
 
 //
 // mixin for a list of fields
@@ -93,5 +93,6 @@ mixin restRouteList(routes)
 //
 // the actual document
 //
-h2 Documentation Entries
-+restRouteList(data)
+div.restapi
+    h2 Documentation Entries
+    +restRouteList(data)
