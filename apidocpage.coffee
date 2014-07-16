@@ -12,6 +12,7 @@ module.exports = class ApiDocPage extends AbstractPage
     constructor: (@parentDir, @manifest) ->
         super parentDir, join parentDir.dir, 'apidoc.html'
         @title = 'API Documentation'
+        @environment = new Codo.Environment()
 
     src: (cb) ->
         console.log "Generating API documentation for #{@parentDir.name}"
@@ -19,16 +20,14 @@ module.exports = class ApiDocPage extends AbstractPage
         cb null, @assembleHtml()
 
     parseCoffeeFiles: ->
-        environment = new Codo.Environment()
-
         # don't consider underscore functions
-        environment.options['implicit-private'] = true
+        @environment.options['implicit-private'] = true
 
         for script in @getScriptFiles()
-            environment.readCoffee "#{@parentDir.dir}/#{script}"
-        environment.linkify()
+            @environment.readCoffee "#{@parentDir.dir}/#{script}"
+        @environment.linkify()
 
-        theme = new Theme environment
+        theme = new Theme @environment
         theme.compile()
 
         @docParts = theme.getOutput()
@@ -53,34 +52,32 @@ module.exports = class ApiDocPage extends AbstractPage
     createNavigation: ->
         nav = "<div id='navigation'>"
         nav += @createLinkList 'Class List', @getClassKeys()
+        nav += @createLinkList 'Mixin List', @getMixinKeys()
         nav += @createLinkList 'Module List', @getFileKeys()
         nav += '</div>'
         return nav
 
     createLinkList: (title, keys) ->
+        return '' if keys.length is 0
         list = "<h1>#{title}</h1><ul>"
         list += "<li><a href='##{key}'>#{key}</a></li>" for key in keys
         list += '</ul>'
         return list
 
     createPart: (key, html) ->
-        "<div class='apidoc' id=#{key}><a href='#navigation'>top</a>#{@correctClassLinks html}</div>"
-
-    # TODO Works only for internal classes of a feature. How to deal with external class links?
-    # TODO: move this logic to theme.coffee#pathFor and templates
-    # TODO: fix links and overview for mixins
-    correctClassLinks: (html) ->
-        for className in @getClassKeys()
-            # replace the original class link by an id reference
-            regex = new RegExp "href=\'[\.\.\/]*class\/#{className}\.html\'", 'g'
-            html = html.replace regex, "href='##{className}'"
-        return html
+        "<div class='apidoc' id=#{key}><a href='#navigation'>top</a>#{html}</div>"
 
     getClassKeys: ->
-        key for key in Object.keys @docParts when key.indexOf('/') is -1
+        classes = []
+        classes = klass.name for klass in @environment.allClasses()
+
+    getMixinKeys: ->
+        classes = []
+        classes = mixin.name for mixin in @environment.allMixins()
 
     getFileKeys: ->
-        key for key in Object.keys @docParts when key.indexOf('/') isnt -1
+        files = []
+        files = file.name for file in @environment.allFiles()
 
     createSeparator: ->
         '<br><hr><hr><br>'

@@ -55,6 +55,6 @@ module.exports = class Theme.Templater
   render: (template, context = {}, filename = '') ->
     html = @JST[template](context)
     if filename.length > 0
-        # the entity name is either a class name or a file path
+        # the entity name is either a class/mixin name or a file path
         @output[context.entity.name] = html
     return html
