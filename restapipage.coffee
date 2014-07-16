@@ -13,6 +13,8 @@ module.exports = class RestApiPage extends AbstractPage
         @title = 'Rest API Documentation'
 
     src: (cb) ->
+        console.log "Generating REST API documentation for #{@parentDir.name}"
+
         data = Apidoc.getParsedData(@parentDir.dir)
 
         if data?

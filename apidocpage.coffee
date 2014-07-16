@@ -14,6 +14,7 @@ module.exports = class ApiDocPage extends AbstractPage
         @title = 'API Documentation'
 
     src: (cb) ->
+        console.log "Generating API documentation for #{@parentDir.name}"
         @parseCoffeeFiles()
         cb null, @assembleHtml()
 
