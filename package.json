@@ -6,7 +6,7 @@
     "mkdirp": "~0.5.0",
     "semaphore": "^1.0.1",
     "marked": "^0.3.2",
-    "codo": "git://github.com/actano/codo.git#exportsAndImplicitPrivate",
+    "codo": "https://github.com/actano/codo/archive/v2.0.9-exportsAndImplicitPrivate.tar.gz",
     "strftime": "~0.8.1",
     "underscore": "~1.6.0",
     "walkdir": "0.0.7",
