@@ -19,21 +19,6 @@ module.exports = class ApiDocPage extends AbstractPage
         cb null, @assembleHtml()
 
     parseCoffeeFiles: ->
-        # the following functions are needed for overriding the original Codo render functions
-        parts = {}
-        customRender = (template, context = {}, filename = '') ->
-            html = @JST[template](context)
-            if filename.length > 0
-                # the entity name is either a class name or a file path
-                parts[context.entity.name] = html
-            return html
-        renderClasses = ->
-            for klass in @environment.allClasses()
-                @render 'class', @pathFor('class', klass), {entity: klass}
-        renderFiles = ->
-            for file in @environment.allFiles()
-                @render 'file', @pathFor('file', file), {entity: file}
-
         environment = new Codo.Environment()
 
         # don't consider underscore functions
@@ -44,13 +29,9 @@ module.exports = class ApiDocPage extends AbstractPage
         environment.linkify()
 
         theme = new Theme environment
-        theme.templater.render = customRender
-        theme.renderClasses = renderClasses
-        theme.renderClasses()
-        theme.renderFiles = renderFiles
-        theme.renderFiles()
+        theme.compile()
 
-        @docParts = parts
+        @docParts = theme.getOutput()
         return
 
     getScriptFiles: ->
@@ -86,6 +67,8 @@ module.exports = class ApiDocPage extends AbstractPage
         "<div class='apidoc' id=#{key}><a href='#navigation'>top</a>#{@correctClassLinks html}</div>"
 
     # TODO Works only for internal classes of a feature. How to deal with external class links?
+    # TODO: move this logic to theme.coffee#pathFor and templates
+    # TODO: fix links and overview for mixins
     correctClassLinks: (html) ->
         for className in @getClassKeys()
             # replace the original class link by an id reference

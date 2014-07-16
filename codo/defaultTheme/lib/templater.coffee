@@ -14,6 +14,7 @@ module.exports = class Theme.Templater
     Path.join(__dirname, '..', subject)
 
   constructor: (@destination) ->
+    @output = {}
     Mincer.StylusEngine.configure (stylus) => stylus.use Nib()
     Mincer.CoffeeEngine.configure bare: false
 
@@ -45,7 +46,7 @@ module.exports = class Theme.Templater
 
   # Render the given template with the context and the
   # global context object merged as template data. Writes
-  # the file as the output filename.
+  # the content into the @output
   #
   # @param [String] template the template name
   # @param [Object] context the context object
@@ -53,12 +54,7 @@ module.exports = class Theme.Templater
   #
   render: (template, context = {}, filename = '') ->
     html = @JST[template](context)
-
     if filename.length > 0
-      file = Path.join @destination, filename
-      dir  = Path.dirname(file)
-
-      mkdirp.sync(dir)
-      FS.writeFileSync(file, html)
-
-    html
+        # the entity name is either a class name or a file path
+        @output[context.entity.name] = html
+    return html
