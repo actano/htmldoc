@@ -10,7 +10,7 @@ Apidoc = require 'apidoc/lib/apidoc'
 module.exports = class RestApiPage extends AbstractPage
     constructor: (@parentDir) ->
         super parentDir, join(parentDir.dir, 'restapi.html')
-        @title = 'Rest API Documentation'
+        @title = 'REST API Documentation'
 
     src: (cb) ->
         console.log "Generating REST API documentation for #{@parentDir.name}"
