@@ -82,7 +82,8 @@
           .event
             %p.signature
               = event.name
-            != @render('partials/documentation', documentation: event.documentation)
+            .detail
+              != @render('partials/documentation', documentation: event.documentation)
 
     - if @documentation.throws
       %h3 Throws:
