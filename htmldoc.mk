@@ -9,7 +9,7 @@ htmldoc/realclean: htmldoc/clean
 	rm -rf $(TOOLS)/htmldoc/node_modules
 
 $(TOOLS)/htmldoc/node_modules/package.json.d: $(TOOLS)/htmldoc/package.json
-	cd $(TOOLS)/htmldoc && npm install
+	cd $(@D)/.. && npm install
 	@touch $@
 
 $(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component-is-build $(TOOLS)/htmldoc/node_modules/package.json.d $(TOOLS)/htmldoc/htmldoc.jade
