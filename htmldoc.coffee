@@ -40,8 +40,7 @@ writeQueue = async.queue (locals, callback) ->
             (templateData, cb) ->
                 fs.writeFile locals.out, (template templateData), cb
         ], (err) ->
-            throw new Error("#{err} in #{locals.url}") if err?
-            callback()
+            callback err
     , 1
 
 dirQueue = async.queue (dir, cb) ->
