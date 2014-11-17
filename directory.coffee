@@ -52,7 +52,7 @@ module.exports = class Directory
                             else if name.substr(-3) == ".js"
                                 new JSFile @, join(@dir, f)
                             else
-                                throw "Unsupported Documentation file: #{f}"
+                                throw new Error("Unsupported Documentation file: #{f}")
                     cb null, subdirs, (page for n, page of @files)
                     return
 

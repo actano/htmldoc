@@ -68,7 +68,7 @@ globalCommitLog = (cb) -> logSem.take ->
                         line.substring(1, i).trim()
                         line.substring(i + 1).trim()
                     ]
-                    throw line if header[0] == ''
+                    throw new Error(line if header[0] == '')
                     key = header[0].toLowerCase()
                     if key == 'hash'
                         commits.push(commit = new Commit url, header[1])
