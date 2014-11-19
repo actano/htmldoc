@@ -3,9 +3,6 @@ HTMLDOC := $(BUILD)/htmldoc
 htmldoc: $(HTMLDOC)/htmldoc.tgz
 
 htmldoc/clean:
-	rm -rf $(HTMLDOC)
-
-htmldoc/realclean: htmldoc/clean
 	rm -rf $(TOOLS)/htmldoc/node_modules
 
 $(TOOLS)/htmldoc/node_modules/package.json.d: $(TOOLS)/htmldoc/package.json
@@ -28,5 +25,4 @@ $(HTMLDOC)/htmldoc.tgz: $(HTMLDOC)/index.html
 .PHONY: htmldoc htmldoc/clean htmldoc/realclean
 
 install: htmldoc
-mostlyclean: htmldoc/clean
-realclean: htmldoc/realclean
+clean: htmldoc/clean
