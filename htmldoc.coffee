@@ -12,6 +12,8 @@ AbstractPage = require './abstractpage'
 
 writeQueue = async.queue (locals, callback) ->
         locals.out = join('build', 'htmldoc', locals.url)
+
+        return "yolo"
         
         async.waterfall [
             (cb) ->
