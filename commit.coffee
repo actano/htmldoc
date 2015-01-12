@@ -43,14 +43,7 @@ globalCommitLog = (cb) -> logSem.take ->
 
     async.waterfall [
         (cb) ->
-            fs.readFile '.rsync-src', 'utf-8', (err, src) ->
-                gitdir = "#{src.trim()}.git" unless err?
-                cb null
-
-        (cb) ->
-            cmd = 'git'
-            cmd = "#{cmd} --git-dir #{gitdir}" if gitdir?
-            exec "#{cmd} config remote.origin.url", (err, stdout, stderr) ->
+            exec "git config remote.origin.url", (err, stdout, stderr) ->
                 if err?
                     console.warn 'Cannot retrieve gitlog: ' + err
                     return cb null, null, null
@@ -96,11 +89,6 @@ globalCommitLog = (cb) -> logSem.take ->
                 '--date=iso'
                 '--pretty=#Hash:%H%n#Date:%cd%n#Author:%an%n#Subject:%s'
             ]
-            if gitdir?
-                params = [
-                    '--git-dir'
-                    gitdir
-                ].concat params
 
             gitlog = spawn 'git', params
             buff = []
