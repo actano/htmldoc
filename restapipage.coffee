@@ -18,7 +18,7 @@ module.exports = class RestApiPage extends AbstractPage
         data = Apidoc.getParsedData(@parentDir.dir)
 
         if data?
-            path = join process.cwd(), 'tools', 'htmldoc', 'views', 'restapi.jade'
+            path = join __dirname, 'views', 'restapi.jade'
 
             cb null, jade.renderFile(path, data: data)
         else
