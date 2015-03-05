@@ -1,19 +1,13 @@
 HTMLDOC := $(BUILD)/htmldoc
+HTMLDOC_SRC := $(dir $(lastword $(MAKEFILE_LIST)))
 
 htmldoc: $(HTMLDOC)/htmldoc.tgz
 
-htmldoc/clean:
-	rm -rf $(TOOLS)/htmldoc/node_modules
-
-$(TOOLS)/htmldoc/node_modules/package.json.d: $(TOOLS)/htmldoc/package.json | clean_npm_tmp
-	cd $(TOOLS)/htmldoc && $(NPM_INSTALL)
-	@touch $@
-
-$(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component-is-build $(TOOLS)/htmldoc/node_modules/package.json.d $(TOOLS)/htmldoc/htmldoc.jade
+$(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component-is-build $(HTMLDOC_SRC)/htmldoc.jade
 	@rm -rf $(HTMLDOC)
 	@mkdir -p "$(HTMLDOC)"
 	tar -c --exclude component-is-build --directory "$(<D)" . | tar -x --directory "$(HTMLDOC)"
-	$(TOOLS)/htmldoc/node_modules/.bin/coffee $(TOOLS)/htmldoc/htmldoc.coffee
+	$(HTMLDOC_SRC)/node_modules/.bin/coffee $(HTMLDOC_SRC)/htmldoc.coffee
 	@touch $(HTMLDOC)/index.html
 
 .SECONDARY: $(HTMLDOC)/%
