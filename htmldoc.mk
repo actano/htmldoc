@@ -3,7 +3,7 @@ HTMLDOC_SRC := $(dir $(lastword $(MAKEFILE_LIST)))
 
 htmldoc: $(HTMLDOC)/htmldoc.tgz
 
-$(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component-is-build $(HTMLDOC_SRC)/htmldoc.jade
+$(HTMLDOC)/index.html: lake $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component-is-build $(HTMLDOC_SRC)/htmldoc.jade
 	@rm -rf $(HTMLDOC)
 	@mkdir -p "$(HTMLDOC)"
 	tar -c --exclude component-is-build --directory "$(<D)" . | tar -x --directory "$(HTMLDOC)"
