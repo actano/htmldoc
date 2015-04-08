@@ -1,6 +1,6 @@
 {
   "name": "htmldoc",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "make include to build documentation",
   "repository": "https://github.com/actano/htmldoc",
   "scripts": {
