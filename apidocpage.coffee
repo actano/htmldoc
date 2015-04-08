@@ -10,7 +10,7 @@ AbstractPage = require './abstractpage'
 ###
 module.exports = class ApiDocPage extends AbstractPage
     constructor: (@parentDir, @manifest) ->
-        super parentDir, join parentDir.dir, 'apidoc.html'
+        super @parentDir, join parentDir.dir, 'apidoc.html'
         @title = 'API Documentation'
         @environment = new Codo.Environment()
 
