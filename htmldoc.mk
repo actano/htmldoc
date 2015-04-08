@@ -7,7 +7,7 @@ $(HTMLDOC)/index.html: $(LOCAL_COMPONENTS)/lib/htmldoc/component-build/component
 	@rm -rf $(HTMLDOC)
 	@mkdir -p "$(HTMLDOC)"
 	tar -c --exclude component-is-build --directory "$(<D)" . | tar -x --directory "$(HTMLDOC)"
-	npm run coffee -- $(HTMLDOC_SRC)/htmldoc.coffee
+	cd $(HTMLDOC_SRC) && npm run coffee -- htmldoc.coffee
 	@touch $(HTMLDOC)/index.html
 
 .SECONDARY: $(HTMLDOC)/%
