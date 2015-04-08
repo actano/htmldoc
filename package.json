@@ -3,6 +3,9 @@
   "version": "0.0.5",
   "description": "make include to build documentation",
   "repository": "https://github.com/actano/htmldoc",
+  "scripts": {
+    "coffee": "coffee"
+  },
   "dependencies": {
     "async": "^0.9.0",
     "coffee-script": "^1.9.1",
