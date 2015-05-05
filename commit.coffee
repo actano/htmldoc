@@ -51,7 +51,7 @@ globalCommitLog = (cb) -> logSem.take ->
                 cb null, stdout, stderr
 
         (stdout, stderr, cb) ->
-            return cb unless stdout?
+            return cb null, null unless stdout?
             baseURL = stdout.toString()
                 .replace /(.git)?\n+$/, ''
                 .replace /^git@github.com:/, 'https://github.com/'
