@@ -1,6 +1,6 @@
 {
   "name": "htmldoc",
-  "version": "0.0.12",
+  "version": "0.0.14",
   "dependencies": {
     "apidoc": {
       "version": "0.6.0",
