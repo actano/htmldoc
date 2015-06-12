@@ -31,7 +31,7 @@ html
                     +faicon('fa-download')
 
             +menu(0)
-        
+
         section.content
             if siblings && siblings.length
                 nav.pages
@@ -45,6 +45,3 @@ html
         each script in scripts
             script(type="text/javascript")
                 != script
-
-    script.
-        require('htmldoc').standalone();
